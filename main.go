@@ -54,4 +54,7 @@ func main() {
 
 func connectionHandler(conn net.Conn) {
 	defer conn.Close()
+	if printDebug {
+		println("Serving request sent by", conn.RemoteAddr().String())
+	}
 }
