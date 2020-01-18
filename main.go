@@ -16,7 +16,7 @@ func main() {
 	)
 
 	flag.BoolVar(&printDebug, "debug", false, "Print Debug Messages")
-	help := flag.Bool("help", false, "Show help message and exit")
+	help := flag.Bool("help", true, "Show help message and exit")
 	flag.Parse()
 
 	if *help {
