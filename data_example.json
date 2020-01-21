@@ -1,14 +1,11 @@
 {
   "ts": "2020-01-15T21:00:00.000Z",
-  "aqi": 421,
   "pm25": {
     "aqi": 421,
     "concentration": 381.1
   },
-  "mainPollutant": "pm25",
   "concentration": 381.1,
   "condition": "Mist",
-  "icon": "mist",
   "humidity": 88,
   "pressure": 1015,
   "wind": {
