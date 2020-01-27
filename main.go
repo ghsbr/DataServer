@@ -2,11 +2,15 @@ package main
 
 import (
 	"flag"
-	"net"
+	//"net"
 	"os"
+
+	"github.com/bvinc/go-sqlite-lite/sqlite3"
 )
 
 var printDebug bool
+
+const longPerTable = 5
 
 func main() {
 	var address string
@@ -30,7 +34,9 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	server, err := net.Listen(
+	//performOneTimeSetup()
+
+	/*server, err := net.Listen(
 		"tcp",
 		"127.0.0.1:8080",
 	)
@@ -49,12 +55,16 @@ func main() {
 			break
 		}
 		go connectionHandler(conn)
-	}
+	}*/
 }
 
-func connectionHandler(conn net.Conn) {
+/*func connectionHandler(conn net.Conn) {
 	defer conn.Close()
 	if printDebug {
 		println("Serving request sent by", conn.RemoteAddr().String())
 	}
+}*/
+
+func performOneTimeSetup(db sqlite3.Conn) {
+
 }
