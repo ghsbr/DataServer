@@ -103,9 +103,9 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	//Creo una tabella ogni 5 "gradi"
 	{
 		var i int64
-		for i = -180; i <= 180; i += 5 {
+		for i = 0; i < 360; i += 5 {
 			if printDebug {
-				println("Creating: long" + strconv.FormatInt(i, 10))
+				println("Creating: long" + strconv.FormatInt(i, 10) + " for " + strconv.FormatInt(i-180, 100))
 			}
 			err = db.Exec("CREATE TABLE long" + strconv.FormatInt(i, 10) + ` (
 	long REAL,
