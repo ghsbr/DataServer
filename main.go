@@ -4,6 +4,7 @@ import (
 	"flag"
 	//"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
@@ -48,7 +49,7 @@ func main() {
 		os.Exit(2)
 	}
 	if printDebug {
-		println(mod)
+		println("Was setup performed? " + strconv.FormatBool(mod))
 	}
 
 	/*server, err := net.Listen(
@@ -100,15 +101,21 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	}
 
 	//Creo una tabella ogni 5 "gradi"
-	for i := -180; i <= 180; i += 5 {
-		err = db.Exec("CREATE TABLE long" + string(i) + ` (
-	long REAL NOT NULL
-	lat REAL NOT NULL
-	idx INTEGER NOT NULL
-	PRIMARY KEY (long lat)
+	{
+		var i int64
+		for i = -180; i <= 180; i += 5 {
+			if printDebug {
+				println("Creating: long" + strconv.FormatInt(i, 10))
+			}
+			err = db.Exec("CREATE TABLE long" + strconv.FormatInt(i, 10) + ` (
+	long REAL,
+	lat REAL,
+	idx INTEGER,
+	PRIMARY KEY (long, lat)
 )`)
-		if err != nil {
-			return true, err
+			if err != nil {
+				return true, err
+			}
 		}
 	}
 
@@ -116,20 +123,21 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
 	if printDebug {
 		println(time.Unix(today, 0).Format(time.UnixDate))
+		println("Creating: d" + strconv.FormatInt(today, 10))
 	}
 
 	//Creo una tabella per la giornata in corso
-	err = db.Exec("CREATE TABLE d" + string(today) + ` (
-	idx INTEGER NOT NULL
-	time INTEGER NOT NULL
-	pm25_concentration REAL
-	condition TEXT
-	humidity INTEGER
-	pressure INTEGER
-	wind_speed REAL
-	wind_direction INTEGER
-	temperature INTEGER
-	PRIMARY KEY(idx time)
+	err = db.Exec("CREATE TABLE d" + strconv.FormatInt(today, 10) + ` (
+	idx INTEGER,
+	time INTEGER,
+	pm25_concentration REAL,
+	condition TEXT,
+	humidity INTEGER,
+	pressure INTEGER,
+	wind_speed REAL,
+	wind_direction INTEGER,
+	temperature INTEGER,
+	PRIMARY KEY(idx, time)
 )`)
 	if err != nil {
 		return true, nil
