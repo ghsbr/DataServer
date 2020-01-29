@@ -36,7 +36,7 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	conn, err := sqlite3.Open(":memory:")
+	conn, err := sqlite3.Open("data.db")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
@@ -105,7 +105,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 		var i int64
 		for i = 0; i < 360; i += 5 {
 			if printDebug {
-				println("Creating: long" + strconv.FormatInt(i, 10) + " for " + strconv.FormatInt(i-180, 100))
+				println("Creating: long" + strconv.FormatInt(i, 10) + " for " + strconv.FormatInt(i-180, 10))
 			}
 			err = db.Exec("CREATE TABLE long" + strconv.FormatInt(i, 10) + ` (
 	long REAL,
