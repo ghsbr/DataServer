@@ -3,54 +3,6 @@
     "name": "Strada di Gogna",
     "city": "Vicenza",
     "country": "Italy",
-    "breadcrumbs": [
-        {
-            "label": "Italy",
-            "url": "/italy"
-        },
-        {
-            "label": "Veneto",
-            "url": "/italy/veneto"
-        },
-        {
-            "label": "Vicenza",
-            "url": "/italy/veneto/vicenza"
-        },
-        {
-            "label": "Strada di Gogna",
-            "url": "/italy/veneto/vicenza/strada-di-gogna"
-        }
-    ],
-    "followers": {
-        "pictures": [
-            "https://cdn.airvisual.net/tiny/default.png",
-            "https://cdn.airvisual.net/tiny/default.png",
-            "https://cdn.airvisual.net/tiny/default.png",
-            "https://cdn.airvisual.net/tiny/default.png",
-            "https://cdn.airvisual.net/tiny/default.png"
-        ],
-        "count": 4751
-    },
-    "contributors": [],
-    "sources": [
-        {
-            "name": "Data validated and calibrated by AirVisual",
-            "url": "profile/airvisual",
-            "pictureURL": "https://cdn.airvisual.net/tiny/default.png",
-            "type": "validator"
-        },
-        {
-            "name": "Sensor By PurpleAir",
-            "url": "profile/purple-air",
-            "pictureURL": "https://cdn.airvisual.net/tiny/default.png",
-            "type": "source"
-        }
-    ],
-    "cityID": "5bac842c24b967f0b53078ae",
-    "timezone": "Europe/Rome",
-    "label": "",
-    "link": "https://cdn.airvisual.net/pages/contribute-data/index.min.html?utm_source=airvisual-app&utm_medium=webpage&utm_campaign=contribute-data-page&utm_term=strada-di-gogna+vicenza",
-    "type": "device",
     "current": {
         "ts": "2020-01-29T13:00:00.000Z",
         "aqi": 145,
@@ -61,7 +13,6 @@
         "mainPollutant": "pm25",
         "concentration": 53.3,
         "condition": "Few clouds",
-        "icon": "new-clouds",
         "humidity": 50,
         "pressure": 1009,
         "wind": {
