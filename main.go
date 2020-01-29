@@ -77,8 +77,10 @@ func main() {
 		println(err.Error())
 		os.Exit(5)
 	}
+	if printDebug {
+		fmt.Printf("%+v\n", out)
+	}
 
-	fmt.Printf("%+v\n", out)
 	/*server, err := net.Listen(
 		"tcp",
 		"127.0.0.1:8080",
