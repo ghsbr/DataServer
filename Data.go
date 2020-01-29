@@ -37,6 +37,10 @@ func (out *Data) UnmarshalJSON(toParse []byte) error {
 
 	out = &Data{
 		timeobj.UTC().Unix(),
+		dataMap.pm25.aqi,
+		dataMap.temperature,
+		dataMap.coordinates.latitude,
+		dataMap.coordinates.longitude,
 	}
 	return nil
 }
