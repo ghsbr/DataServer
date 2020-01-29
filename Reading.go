@@ -22,5 +22,6 @@ func main() {
 	type Veneto struct
 	{
 		Time string 'json:"ts"'
+		
 	}
 }

@@ -1,0 +1,748 @@
+{
+    "id": "5c652852eff5bf47a1cac6ac",
+    "name": "Strada di Gogna",
+    "city": "Vicenza",
+    "country": "Italy",
+    "breadcrumbs": [
+        {
+            "label": "Italy",
+            "url": "/italy"
+        },
+        {
+            "label": "Veneto",
+            "url": "/italy/veneto"
+        },
+        {
+            "label": "Vicenza",
+            "url": "/italy/veneto/vicenza"
+        },
+        {
+            "label": "Strada di Gogna",
+            "url": "/italy/veneto/vicenza/strada-di-gogna"
+        }
+    ],
+    "followers": {
+        "pictures": [
+            "https://cdn.airvisual.net/tiny/default.png",
+            "https://cdn.airvisual.net/tiny/default.png",
+            "https://cdn.airvisual.net/tiny/default.png",
+            "https://cdn.airvisual.net/tiny/default.png",
+            "https://cdn.airvisual.net/tiny/default.png"
+        ],
+        "count": 4751
+    },
+    "contributors": [],
+    "sources": [
+        {
+            "name": "Data validated and calibrated by AirVisual",
+            "url": "profile/airvisual",
+            "pictureURL": "https://cdn.airvisual.net/tiny/default.png",
+            "type": "validator"
+        },
+        {
+            "name": "Sensor By PurpleAir",
+            "url": "profile/purple-air",
+            "pictureURL": "https://cdn.airvisual.net/tiny/default.png",
+            "type": "source"
+        }
+    ],
+    "cityID": "5bac842c24b967f0b53078ae",
+    "timezone": "Europe/Rome",
+    "label": "",
+    "link": "https://cdn.airvisual.net/pages/contribute-data/index.min.html?utm_source=airvisual-app&utm_medium=webpage&utm_campaign=contribute-data-page&utm_term=strada-di-gogna+vicenza",
+    "type": "device",
+    "current": {
+        "ts": "2020-01-29T13:00:00.000Z",
+        "aqi": 145,
+        "pm25": {
+            "aqi": 145,
+            "concentration": 53.3
+        },
+        "mainPollutant": "pm25",
+        "concentration": 53.3,
+        "condition": "Few clouds",
+        "icon": "new-clouds",
+        "humidity": 50,
+        "pressure": 1009,
+        "wind": {
+            "speed": 18.4,
+            "direction": 250
+        },
+        "temperature": 9
+    },
+    "coordinates": {
+        "latitude": 45.533205,
+        "longitude": 11.533876
+    },
+    "forecasts": {
+        "hourly": [
+            {
+                "ts": "2020-01-29T13:00:00.000Z",
+                "aqi": 145,
+                "pressure": 1009,
+                "humidity": 50,
+                "wind": {
+                    "speed": 18.4,
+                    "direction": 250
+                },
+                "icon": "new-clouds",
+                "condition": "Few clouds",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-29T15:00:00.000Z",
+                "aqi": 131,
+                "pressure": 1010,
+                "humidity": 54,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 85
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-29T18:00:00.000Z",
+                "aqi": 118,
+                "pressure": 1014,
+                "humidity": 66,
+                "wind": {
+                    "speed": 0,
+                    "direction": 265
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-01-29T21:00:00.000Z",
+                "aqi": 101,
+                "pressure": 1016,
+                "humidity": 67,
+                "wind": {
+                    "speed": 0,
+                    "direction": 245
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-01-30T00:00:00.000Z",
+                "aqi": 40,
+                "pressure": 1018,
+                "humidity": 66,
+                "wind": {
+                    "speed": 0,
+                    "direction": 17
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-01-30T03:00:00.000Z",
+                "aqi": 30,
+                "pressure": 1018,
+                "humidity": 67,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 41
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 4
+            },
+            {
+                "ts": "2020-01-30T06:00:00.000Z",
+                "aqi": 30,
+                "pressure": 1020,
+                "humidity": 64,
+                "wind": {
+                    "speed": 0,
+                    "direction": 22
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 3
+            },
+            {
+                "ts": "2020-01-30T09:00:00.000Z",
+                "aqi": 79,
+                "pressure": 1020,
+                "humidity": 55,
+                "wind": {
+                    "speed": 0,
+                    "direction": 14
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-01-30T12:00:00.000Z",
+                "aqi": 58,
+                "pressure": 1019,
+                "humidity": 50,
+                "wind": {
+                    "speed": 0,
+                    "direction": 109
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-30T15:00:00.000Z",
+                "aqi": 58,
+                "pressure": 1018,
+                "humidity": 58,
+                "wind": {
+                    "speed": 0,
+                    "direction": 106
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-30T18:00:00.000Z",
+                "aqi": 79,
+                "pressure": 1019,
+                "humidity": 68,
+                "wind": {
+                    "speed": 0,
+                    "direction": 49
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-01-30T21:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1019,
+                "humidity": 69,
+                "wind": {
+                    "speed": 0,
+                    "direction": 17
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-01-31T00:00:00.000Z",
+                "aqi": 58,
+                "pressure": 1020,
+                "humidity": 69,
+                "wind": {
+                    "speed": 0,
+                    "direction": 278
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-01-31T03:00:00.000Z",
+                "aqi": 58,
+                "pressure": 1018,
+                "humidity": 73,
+                "wind": {
+                    "speed": 0,
+                    "direction": 229
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-01-31T06:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1018,
+                "humidity": 79,
+                "wind": {
+                    "speed": 0,
+                    "direction": 206
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 4
+            },
+            {
+                "ts": "2020-01-31T09:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1018,
+                "humidity": 69,
+                "wind": {
+                    "speed": 0,
+                    "direction": 43
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-01-31T12:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1019,
+                "humidity": 54,
+                "wind": {
+                    "speed": 0,
+                    "direction": 58
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-31T15:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1018,
+                "humidity": 53,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 45
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-01-31T18:00:00.000Z",
+                "aqi": 100,
+                "pressure": 1019,
+                "humidity": 67,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 35
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-01-31T21:00:00.000Z",
+                "aqi": 123,
+                "pressure": 1020,
+                "humidity": 71,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 9
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-02-01T00:00:00.000Z",
+                "aqi": 123,
+                "pressure": 1020,
+                "humidity": 73,
+                "wind": {
+                    "speed": 0,
+                    "direction": 20
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-02-01T03:00:00.000Z",
+                "aqi": 79,
+                "pressure": 1018,
+                "humidity": 75,
+                "wind": {
+                    "speed": 0,
+                    "direction": 13
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-02-01T06:00:00.000Z",
+                "aqi": 68,
+                "pressure": 1018,
+                "humidity": 72,
+                "wind": {
+                    "speed": 0,
+                    "direction": 18
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-02-01T09:00:00.000Z",
+                "aqi": 75,
+                "pressure": 1018,
+                "humidity": 66,
+                "wind": {
+                    "speed": 0,
+                    "direction": 173
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-02-01T12:00:00.000Z",
+                "aqi": 89,
+                "pressure": 1017,
+                "humidity": 54,
+                "wind": {
+                    "speed": 0,
+                    "direction": 217
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 10
+            },
+            {
+                "ts": "2020-02-01T15:00:00.000Z",
+                "aqi": 87,
+                "pressure": 1016,
+                "humidity": 61,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 222
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 10
+            },
+            {
+                "ts": "2020-02-01T18:00:00.000Z",
+                "aqi": 91,
+                "pressure": 1016,
+                "humidity": 72,
+                "wind": {
+                    "speed": 0,
+                    "direction": 264
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 8
+            },
+            {
+                "ts": "2020-02-01T21:00:00.000Z",
+                "aqi": 91,
+                "pressure": 1017,
+                "humidity": 76,
+                "wind": {
+                    "speed": 0,
+                    "direction": 327
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-02-02T00:00:00.000Z",
+                "aqi": 81,
+                "pressure": 1016,
+                "humidity": 81,
+                "wind": {
+                    "speed": 0,
+                    "direction": 25
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-02-02T03:00:00.000Z",
+                "aqi": 75,
+                "pressure": 1018,
+                "humidity": 83,
+                "wind": {
+                    "speed": 0,
+                    "direction": 12
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-02-02T06:00:00.000Z",
+                "aqi": 68,
+                "pressure": 1020,
+                "humidity": 84,
+                "wind": {
+                    "speed": 0,
+                    "direction": 222
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 4
+            },
+            {
+                "ts": "2020-02-02T09:00:00.000Z",
+                "aqi": 73,
+                "pressure": 1022,
+                "humidity": 72,
+                "wind": {
+                    "speed": 0,
+                    "direction": 128
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-02-02T12:00:00.000Z",
+                "aqi": 5,
+                "pressure": 1023,
+                "humidity": 55,
+                "wind": {
+                    "speed": 0,
+                    "direction": 102
+                },
+                "icon": "new-clouds",
+                "condition": "Few clouds",
+                "temperature": 11
+            },
+            {
+                "ts": "2020-02-02T15:00:00.000Z",
+                "aqi": 5,
+                "pressure": 1022,
+                "humidity": 58,
+                "wind": {
+                    "speed": 0,
+                    "direction": 148
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": 11
+            },
+            {
+                "ts": "2020-02-02T18:00:00.000Z",
+                "aqi": 5,
+                "pressure": 1024,
+                "humidity": 71,
+                "wind": {
+                    "speed": 0,
+                    "direction": 257
+                },
+                "icon": "night-clear-sky",
+                "condition": "Clear sky",
+                "temperature": 9
+            },
+            {
+                "ts": "2020-02-02T21:00:00.000Z",
+                "aqi": 5,
+                "pressure": 1024,
+                "humidity": 76,
+                "wind": {
+                    "speed": 0,
+                    "direction": 305
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 8
+            },
+            {
+                "ts": "2020-02-03T00:00:00.000Z",
+                "aqi": 9,
+                "pressure": 1025,
+                "humidity": 79,
+                "wind": {
+                    "speed": 0,
+                    "direction": 26
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-02-03T03:00:00.000Z",
+                "aqi": 17,
+                "pressure": 1025,
+                "humidity": 74,
+                "wind": {
+                    "speed": 0,
+                    "direction": 10
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 6
+            },
+            {
+                "ts": "2020-02-03T06:00:00.000Z",
+                "aqi": 17,
+                "pressure": 1025,
+                "humidity": 70,
+                "wind": {
+                    "speed": 0,
+                    "direction": 337
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 5
+            },
+            {
+                "ts": "2020-02-03T09:00:00.000Z",
+                "aqi": 26,
+                "pressure": 1025,
+                "humidity": 64,
+                "wind": {
+                    "speed": 0,
+                    "direction": 28
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": 7
+            },
+            {
+                "ts": "2020-02-03T12:00:00.000Z",
+                "aqi": 26,
+                "pressure": 1025,
+                "humidity": 56,
+                "wind": {
+                    "speed": 0,
+                    "direction": 121
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": 10
+            }
+        ],
+        "daily": [
+            {
+                "ts": "2020-01-29T00:00:00.000Z",
+                "aqi": 117,
+                "pressure": 1011,
+                "humidity": 51,
+                "wind": {
+                    "speed": 3.6,
+                    "direction": 169
+                },
+                "icon": "new-clouds",
+                "condition": "Few clouds",
+                "temperature": {
+                    "max": 9,
+                    "min": 5
+                }
+            },
+            {
+                "ts": "2020-01-30T00:00:00.000Z",
+                "aqi": 58,
+                "pressure": 1019,
+                "humidity": 50,
+                "wind": {
+                    "speed": 0,
+                    "direction": 109
+                },
+                "icon": "scattered-clouds",
+                "condition": "Scattered clouds",
+                "temperature": {
+                    "max": 9,
+                    "min": 3
+                }
+            },
+            {
+                "ts": "2020-01-31T00:00:00.000Z",
+                "aqi": 93,
+                "pressure": 1019,
+                "humidity": 54,
+                "wind": {
+                    "speed": 0,
+                    "direction": 58
+                },
+                "icon": "clear-sky",
+                "condition": "Clear sky",
+                "temperature": {
+                    "max": 9,
+                    "min": 4
+                }
+            },
+            {
+                "ts": "2020-02-01T00:00:00.000Z",
+                "aqi": 88,
+                "pressure": 1017,
+                "humidity": 54,
+                "wind": {
+                    "speed": 0,
+                    "direction": 217
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": {
+                    "max": 10,
+                    "min": 6
+                }
+            },
+            {
+                "ts": "2020-02-02T00:00:00.000Z",
+                "aqi": 40,
+                "pressure": 1023,
+                "humidity": 55,
+                "wind": {
+                    "speed": 0,
+                    "direction": 102
+                },
+                "icon": "new-clouds",
+                "condition": "Few clouds",
+                "temperature": {
+                    "max": 11,
+                    "min": 4
+                }
+            },
+            {
+                "ts": "2020-02-03T00:00:00.000Z",
+                "aqi": 30,
+                "pressure": 1025,
+                "humidity": 56,
+                "wind": {
+                    "speed": 0,
+                    "direction": 121
+                },
+                "icon": "scattered-clouds",
+                "condition": "Broken clouds",
+                "temperature": {
+                    "max": 10,
+                    "min": 5
+                }
+            },
+            {
+                "ts": "2020-02-04T00:00:00.000Z",
+                "aqi": 63,
+                "pressure": 1013,
+                "humidity": 74,
+                "wind": {
+                    "speed": 0,
+                    "direction": 132
+                },
+                "icon": "rain",
+                "condition": "Rain",
+                "temperature": {
+                    "max": 8,
+                    "min": 5
+                }
+            }
+        ]
+    },
+    "recommendations": {
+        "pollution": {
+            "exercice": {
+                "value": "red",
+                "text": "Everyone should reduce outdoor exercise"
+            },
+            "windows": {
+                "value": "red",
+                "text": "Close your windows to avoid dirty outdoor air"
+            },
+            "mask": {
+                "value": "orange",
+                "text": "Sensitive groups should wear a mask outdoors"
+            },
+            "air_purifier": {
+                "value": "red",
+                "text": "Run an air purifier"
+            }
+        }
+    }
+}
