@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	//"net"
+	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -52,6 +54,31 @@ func main() {
 		println("Was setup performed? " + strconv.FormatBool(mod))
 	}
 
+	var jsonExample []byte
+	{
+		file, err := os.Open("data_example.json")
+		if err != nil {
+			println(err.Error())
+			os.Exit(3)
+		}
+
+		if stat, err := file.Stat(); err == nil {
+			jsonExample = make([]byte, stat.Size())
+			file.Read(jsonExample)
+		} else {
+			println(err.Error())
+			os.Exit(4)
+		}
+		file.Close()
+	}
+
+	var out Data
+	if err = json.Unmarshal(jsonExample, &out); err != nil {
+		println(err.Error())
+		os.Exit(5)
+	}
+
+	fmt.Printf("%+v\n", out)
 	/*server, err := net.Listen(
 		"tcp",
 		"127.0.0.1:8080",
