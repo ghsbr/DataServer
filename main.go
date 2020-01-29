@@ -72,6 +72,10 @@ func main() {
 		file.Close()
 	}
 
+	if printDebug {
+		println(string(jsonExample))
+	}
+
 	var out Data
 	if err = json.Unmarshal(jsonExample, &out); err != nil {
 		println(err.Error())
