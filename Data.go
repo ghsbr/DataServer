@@ -16,6 +16,11 @@ Contiene I dati di:
 			=> Indice di concentrazione delle polveri sottili nell'aria
 	=> Condition - Condizione meteorologica al momento della misurazione
 	=> Humidity - Livello di Umidità al momento della misura
+	=> Pressure - Livello di pressione al momento della misurazione
+	=> Wind - Informazioni sul vento al momento della misurazione
+		=> Speed - Velocità del vento
+		=> Direction - Direzione del vento
+	=> Temperature - Temperatura al momento della misurazione
 */
 type Data struct {
 	Ts          int64
