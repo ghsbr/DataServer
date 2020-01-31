@@ -38,7 +38,7 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	conn, err := sqlite3.Open("data.db")
+	conn, err := sqlite3.Open(/*"data.db"*/":memory:")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
@@ -71,7 +71,6 @@ func main() {
 		}
 		file.Close()
 	}
-
 	if printDebug {
 		println(string(jsonExample))
 	}
@@ -164,11 +163,6 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	idx INTEGER,
 	time INTEGER,
 	pm25_concentration REAL,
-	condition TEXT,
-	humidity INTEGER,
-	pressure INTEGER,
-	wind_speed REAL,
-	wind_direction INTEGER,
 	temperature INTEGER,
 	PRIMARY KEY(idx, time)
 )`)
