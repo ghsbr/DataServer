@@ -21,6 +21,8 @@ Contiene I dati di:
 		=> Speed - Velocità del vento
 		=> Direction - Direzione del vento
 	=> Temperature - Temperatura al momento della misurazione
+	=> Latitude - Latitudine di riferimento per la misurazione corrente
+	=> Longitude - Longitudine di riferimento per la misurazione corrente
 */
 type Data struct {
 	Ts          int64
@@ -30,6 +32,11 @@ type Data struct {
 	Longitude   float64
 }
 
+/*
+	Il programma carica il JSON e ritorna un errore nel caso in cui ci isano problemi, altrimenti lo stampa
+	Successivamente corregge il formato del tempo e ritorna un errore nel caso di problemi
+	Alla fine gli viene detto dove andare ad inserire i dati che troverà nel JSON
+*/
 func (out *Data) UnmarshalJSON(toParse []byte) error {
 	var dataMap data
 	if err := json.Unmarshal(toParse, &dataMap); err != nil {
@@ -52,6 +59,10 @@ func (out *Data) UnmarshalJSON(toParse []byte) error {
 	return nil
 }
 
+/*
+	Al programma viene detto dove andare a prendere i dati richiesti dentro il file che è stato caricato
+	e dove andare poi a mettere la relativa copia
+*/
 type data struct {
 	Ts   string `json:"ts"`
 	Pm25 struct {
