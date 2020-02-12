@@ -1,9 +1,8 @@
 package main
 
 import (
-	"flag"
-	//"net"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -38,7 +37,7 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	conn, err := sqlite3.Open(/*"data.db"*/":memory:")
+	conn, err := sqlite3.Open( /*"data.db"*/ ":memory:")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
@@ -84,6 +83,8 @@ func main() {
 		fmt.Printf("%+v\n", out)
 	}
 
+	conn.Exec("INSERT OR REPLACE INTO long" + strconv.FormatInt(int64((out.Longitude+180)/5), 10) + " VALUES()")
+
 	/*server, err := net.Listen(
 		"tcp",
 		"127.0.0.1:8080",
@@ -100,7 +101,7 @@ func main() {
 		conn, err := server.Accept()
 		if err != nil {
 			println(err.Error())
-			break
+			continue
 		}
 		go connectionHandler(conn)
 	}*/
@@ -167,7 +168,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	PRIMARY KEY(idx, time)
 )`)
 	if err != nil {
-		return true, nil
+		return true, err
 	}
 	return true, nil
 }
