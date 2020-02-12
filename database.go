@@ -1,30 +1,31 @@
 package main
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
 )
 
-type Database struct{
+type Database struct {
 	conn *sqlite3.Conn
-
 }
 
-func newDatabase(string file) (Database, error){
-	
+func newDatabase(file string) (Database, error) {
+
 	conn, err := sqlite3.Open(file)
 	performOneTimeSetup(conn)
 
 	if err == nil {
 		return Database{conn}, nil
 	}
-	else{
-		return Database{nil}, err
-	}
+	return Database{nil}, err
 }
 
+//TODO: usare una Session
 func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	//Prepariamo la query SQL
-	stmt, err := db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='long0'")
+	stmt, err := db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ids'")
 	if err != nil {
 		return false, err
 	}
@@ -40,6 +41,9 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 		return false, nil
 	}
 
+	err = db.Exec(`CREATE TABLE ids (
+	id INTEGER PRIMARY KEY DESC AUTOINCREMENT
+)`)
 	//Creo una tabella ogni 5 "gradi"
 	{
 		var i int64
@@ -48,10 +52,9 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 				println("Creating: long" + strconv.FormatInt(i, 10) + " for " + strconv.FormatInt(i-180, 10))
 			}
 			err = db.Exec("CREATE TABLE long" + strconv.FormatInt(i, 10) + ` (
-	long REAL,
-	lat REAL,
-	idx INTEGER,
-	PRIMARY KEY (long, lat)
+	long REAL PRIMARY KEY DESC,
+	lat REAL PRIMARY KEY DESC,
+	idx INTEGER
 )`)
 			if err != nil {
 				return true, err
