@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
 )
@@ -36,18 +37,12 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	conn, err := sqlite3.Open( /*"data.db"*/ ":memory:")
+	db, mod, err := newDatabase("data.db")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
 	}
-	defer conn.Close()
-
-	mod, err := performOneTimeSetup(conn)
-	if err != nil {
-		println(err.Error())
-		os.Exit(2)
-	}
+	defer db.Close()
 	if printDebug {
 		println("Was setup performed? " + strconv.FormatBool(mod))
 	}
@@ -82,50 +77,7 @@ func main() {
 		fmt.Printf("%+v\n", out)
 	}
 
-	{
-		stmt, err := conn.Prepare(
-			"SELECT id FROM long? WHERE long='?' AND lat='?'",
-			int64((out.Longitude+180)/5), out.Longitude, out.Latitude,
-		)
-		if err != nil {
-			println(err.Error())
-			os.Exit(6)
-		}
-		defer stmt.Close()
-
-		next, err := stmt.Step()
-		if err != nil {
-			println(err.Error())
-			os.Exit(7)
-		}
-
-		var id int64
-		if next {
-			id, ok, err := stmt.ColumnInt64(0)
-			if err != nil {
-				println(err.Error())
-				os.Exit(7)
-			}
-			if printDebug {
-				println(strconv.FormatBool(ok))
-			}
-		} else {
-
-		}
-	}
-	/*"CREATE TABLE long" + strconv.FormatInt(i, 10) + ` (
-		long REAL,
-		lat REAL,
-		idx INTEGER,
-		PRIMARY KEY (long, lat)
-	)`*/
-	/*"CREATE TABLE d" + strconv.FormatInt(today, 10) + ` (
-		idx INTEGER,
-		time INTEGER,
-		pm25_concentration REAL,
-		temperature INTEGER,
-		PRIMARY KEY(idx, time)
-	)`*/
+	db.Insert(out)
 
 	/*server, err := net.Listen(
 		"tcp",
