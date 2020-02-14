@@ -5,10 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"time"
-
-	"github.com/bvinc/go-sqlite-lite/sqlite3"
 )
 
 var printDebug bool
@@ -37,14 +33,14 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	db, mod, err := newDatabase("data.db")
+	db, mod, err := NewDatabase( /*"data.db"*/ ":memory:")
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
 	}
 	defer db.Close()
 	if printDebug {
-		println("Was setup performed? " + strconv.FormatBool(mod))
+		fmt.Printf("Was setup performed? %v", mod)
 	}
 
 	var jsonExample []byte
