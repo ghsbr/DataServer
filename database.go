@@ -88,6 +88,63 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	return ret, nil
 }
 
+func (db *Database) ApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+	idxs, err := (func() ([]int64, error) {
+		stmt, err := db.conn.Prepare(
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getLongIdx(long))+" WHERE long>? AND long<? AND lat>? AND lat<?",
+			long-rng, long+rng, lat-rng, lat+rng,
+		)
+		defer stmt.Close()
+		if err != nil {
+			return 0, err
+		}
+
+		next, err := stmt.Step()
+		if err != nil {
+			return 0, err
+		}
+		if !next {
+			return 0, NotFoundError{"Station not Found"}
+		}
+
+		var idx int64
+		err = stmt.Scan(&idx)
+		return idx, err
+	})()
+	if err != nil {
+		return Data{}, err
+	}
+
+	stmt, err := db.conn.Prepare(
+		"SELECT time,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix())+" WHERE idx=?",
+		idx,
+	)
+	if err != nil {
+		return Data{}, err
+	}
+	defer stmt.Close()
+
+	next, err := stmt.Step()
+	if err != nil {
+		return Data{}, err
+	}
+	if !next {
+		return Data{}, NotFoundError{"Station not Found"}
+	}
+
+	var ret Data
+	err = stmt.Scan(&ret.Ts, &ret.Pm25Aqi, &ret.Temperature)
+	if err != nil {
+		return Data{}, err
+	}
+
+	ret.Latitude = lat
+	ret.Longitude = long
+	return ret, nil
+}
+
 func (db *Database) Insert(data Data) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
