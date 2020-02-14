@@ -36,7 +36,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	defer db.lock.RUnlock()
 	idx, err := (func() (int64, error) {
 		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getLongIdx(long))+" WHERE long=? AND lat=?",
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long))+" WHERE long=? AND lat=?",
 			long, lat,
 		)
 		defer stmt.Close()
@@ -61,7 +61,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	}
 
 	stmt, err := db.conn.Prepare(
-		"SELECT time,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix())+" WHERE idx=?",
+		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix())+" WHERE idx=?",
 		idx,
 	)
 	if err != nil {
@@ -78,70 +78,86 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	}
 
 	var ret Data
-	err = stmt.Scan(&ret.Ts, &ret.Pm25Aqi, &ret.Temperature)
+	err = stmt.Scan(&ret.Ts, &ret.Longitude, &ret.Latitude, &ret.Pm25Aqi, &ret.Temperature)
 	if err != nil {
 		return Data{}, err
 	}
 
-	ret.Latitude = lat
-	ret.Longitude = long
 	return ret, nil
 }
 
-func (db *Database) ApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
+func (db *Database) actualApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
 		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getLongIdx(long))+" WHERE long>? AND long<? AND lat>? AND lat<?",
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long))+" WHERE long>? AND long<? AND lat>? AND lat<?",
 			long-rng, long+rng, lat-rng, lat+rng,
 		)
-		defer stmt.Close()
 		if err != nil {
-			return 0, err
+			return nil, err
+		}
+		defer stmt.Close()
+
+		idxs := make([]int64, 0)
+		for next, err := stmt.Step(); next && err == nil; next, err = stmt.Step() {
+			idxs = append(idxs, 0)
+			err = stmt.Scan(&idxs[len(idxs)-1])
+			if err != nil {
+				break
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		return idxs, nil
+	})()
+	if err != nil {
+		return nil, err
+	}
+
+	stmt, err := db.conn.Prepare(
+		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix()) + " WHERE idx=?",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	ret := make([]Data, 0)
+	for idx := range idxs {
+		err = stmt.Bind(idx)
+		if err != nil {
+			break
 		}
 
 		next, err := stmt.Step()
 		if err != nil {
-			return 0, err
+			break
 		}
 		if !next {
-			return 0, NotFoundError{"Station not Found"}
+			/*err = NotFoundError{fmt.Sprintf("Station %v not found", idx)}
+			break*/
+			continue
 		}
 
-		var idx int64
-		err = stmt.Scan(&idx)
-		return idx, err
-	})()
+		var station Data
+		err = stmt.Scan(&station.Ts, &station.Longitude, &station.Latitude, &station.Pm25Aqi, &station.Temperature)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, station)
+
+		err = stmt.Reset()
+		if err != nil {
+			break
+		}
+	}
 	if err != nil {
-		return Data{}, err
+		return nil, err
 	}
 
-	stmt, err := db.conn.Prepare(
-		"SELECT time,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix())+" WHERE idx=?",
-		idx,
-	)
-	if err != nil {
-		return Data{}, err
-	}
-	defer stmt.Close()
-
-	next, err := stmt.Step()
-	if err != nil {
-		return Data{}, err
-	}
-	if !next {
-		return Data{}, NotFoundError{"Station not Found"}
-	}
-
-	var ret Data
-	err = stmt.Scan(&ret.Ts, &ret.Pm25Aqi, &ret.Temperature)
-	if err != nil {
-		return Data{}, err
-	}
-
-	ret.Latitude = lat
-	ret.Longitude = long
 	return ret, nil
 }
 
@@ -149,7 +165,7 @@ func (db *Database) Insert(data Data) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 	stmt, err := db.conn.Prepare(
-		"SELECT idx FROM long"+fmt.Sprintf("%v", getLongIdx(data.Longitude))+" WHERE long=? AND lat=?",
+		"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(data.Longitude))+" WHERE long=? AND lat=?",
 		data.Longitude, data.Latitude,
 	)
 	if err != nil {
@@ -176,7 +192,7 @@ func (db *Database) Insert(data Data) error {
 
 		id = db.conn.LastInsertRowID()
 		err = db.conn.Exec(
-			"INSERT INTO long"+fmt.Sprintf("%v", getLongIdx(data.Longitude))+" VALUES (?, ?, ?)",
+			"INSERT INTO long"+fmt.Sprintf("%v", getIndexFromLongitude(data.Longitude))+" VALUES (?, ?, ?)",
 			data.Longitude, data.Latitude, id,
 		)
 		if err != nil {
@@ -186,8 +202,8 @@ func (db *Database) Insert(data Data) error {
 
 	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
 	err = db.conn.Exec(
-		"INSERT OR REPLACE INTO d"+fmt.Sprintf("%v", today)+" VALUES (?, ?, ?, ?)",
-		id, data.Ts, data.Pm25Aqi, data.Temperature,
+		"INSERT OR REPLACE INTO d"+fmt.Sprintf("%v", today)+" VALUES (?, ?, ?, ?, ?, ?)",
+		id, data.Ts, data.Longitude, data.Latitude, data.Pm25Aqi, data.Temperature,
 	)
 	return err
 }
@@ -249,6 +265,8 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	err = db.Exec("CREATE TABLE d" + fmt.Sprintf("%v", today) + ` (
 	idx INTEGER,
 	time INTEGER,
+	long REAL,
+	lat REAL,
 	pm25_concentration REAL,
 	temperature INTEGER,
 	PRIMARY KEY(idx, time)
@@ -259,7 +277,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	return true, nil
 }
 
-func getLongIdx(long float64) int64 {
+func getIndexFromLongitude(long float64) int64 {
 	posIdx := int64(long + 180)
 	return posIdx - posIdx%5
 }
