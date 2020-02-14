@@ -40,7 +40,7 @@ func main() {
 	}
 	defer db.Close()
 	if printDebug {
-		fmt.Printf("Was setup performed? %v", mod)
+		fmt.Printf("Was setup performed? %v\n", mod)
 	}
 
 	var jsonExample []byte

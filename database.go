@@ -91,7 +91,7 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day time.T
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
 		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long))+" WHERE long>? AND long<? AND lat>? AND lat<?",
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long-rng))+" WHERE long>? AND long<? AND lat>? AND lat<?",
 			long-rng, long+rng, lat-rng, lat+rng,
 		)
 		if err != nil {
@@ -240,7 +240,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 		var i int64
 		for i = 0; i < 360; i += 5 {
 			if printDebug {
-				fmt.Printf("Creating: long%v for %v", i, i-180)
+				fmt.Printf("Creating: long%v for %v\n", i, i-180)
 			}
 			err = db.Exec("CREATE TABLE long" + fmt.Sprintf("%v", i) + ` (
 	long REAL,
