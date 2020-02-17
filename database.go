@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
 )
+
+const longPerTable = 5
 
 //uno struct che fa da man-in-the-middle per il database
 type Database struct {
@@ -86,12 +89,39 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	return ret, nil
 }
 
+func (db *Database) ApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
+	lowIdx := getIndexFromLongitude(long - rng)
+	if lowIdx == getIndexFromLongitude(long+rng) {
+		return db.actualApproximateQuery(long, lat, day, rng)
+	} else {
+		ret, err := db.actualApproximateQuery(
+			long-rng,
+			float64(lowIdx+longPerTable),
+			day, math.Abs(long-math.Trunc(long)),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		upperLimit := long + rng
+		for i := float64(lowIdx + longPerTable); i <= upperLimit; i += longPerTable {
+			part, err := db.actualApproximateQuery(i, math.Min(i+longPerTable, upperLimit), day, i-math.Min(i+longPerTable, upperLimit))
+			if err != nil {
+				return nil, err
+			}
+
+			ret = append(ret, part...)
+		}
+		return ret, nil
+	}
+}
+
 func (db *Database) actualApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
 		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long-rng))+" WHERE long>? AND long<? AND lat>? AND lat<?",
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long-rng))+" WHERE long>=? AND long<=? AND lat>=? AND lat<=?",
 			long-rng, long+rng, lat-rng, lat+rng,
 		)
 		if err != nil {
@@ -279,7 +309,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 
 func getIndexFromLongitude(long float64) int64 {
 	posIdx := int64(long + 180)
-	return posIdx - posIdx%5
+	return posIdx - posIdx%longPerTable
 }
 
 type NotFoundError struct {

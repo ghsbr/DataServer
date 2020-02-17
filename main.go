@@ -9,8 +9,6 @@ import (
 
 var printDebug bool
 
-const longPerTable = 5
-
 func main() {
 	var address string
 	flag.StringVar(
