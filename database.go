@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
+	//"github.com/cespare/xxhash"
 )
 
 const longPerTable = 5
@@ -238,7 +239,7 @@ func (db *Database) Insert(data Data) error {
 	return err
 }
 
-func (db Database) Close() error {
+func (db *Database) Close() error {
 	return db.conn.Close()
 }
 
