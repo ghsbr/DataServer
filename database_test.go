@@ -1,75 +1,59 @@
 package main
 
 import (
-	"testing"
-	"fmt"
-	"os"
 	"encoding/json"
+	"os"
+	"testing"
+	"time"
 )
 
 var db Database
 
-func TestNewDatabase(dc *testing.T){
-	//t.Errror()
-	db,_,err :=  NewDatabase(":memory:")
-	if err != nil{
-		dc.Errorf("Error found %v", err)
+func TestNewDatabase(dc *testing.T) {
+	db, _, err := NewDatabase(":memory:")
+	if err != nil {
+		dc.Errorf("Error while creating Database: %v", err)
 	}
 }
 
-func TestInsert(dc *testing.T){
+var out Data
+
+func TestInsert(dc *testing.T) {
 	var jsonExample []byte
 	{
 		file, err := os.Open("data_example.json")
 		if err != nil {
-			println(err.Error())
-			os.Exit(3)
+			dc.Errorf("Error while opening data_example: %v", err)
 		}
 		if stat, err := file.Stat(); err == nil {
 			jsonExample = make([]byte, stat.Size())
 			file.Read(jsonExample)
 		} else {
-			println(err.Error())
-			os.Exit(4)
+			dc.Errorf("Error while reading File stats: %v", err)
 		}
 		file.Close()
 	}
-	if printDebug {
-		println(string(jsonExample))
-	}
-}
-
-func pTestInsert(dc *testing.T){
-	var out Data
 	if err := json.Unmarshal(jsonExample, &out); err != nil {
-		println(err.Error())
-		os.Exit(5)
-	}
-	if printDebug {
-		fmt.Printf("%+v\n", out)
+		dc.Errorf("Error while parsing json: %v", err)
 	}
 
 	err := db.Insert(out)
-	if  err != nil{
-		dc.Errorf("Error found %v", err)
-	} 
-}
-
-/*func TestPreciseQuery(dc *testing.T){
-	//t.Errror()
-	db,_,err :=  db.PreciseQuery(long float64, lat float64, day int64)
-	if  err != nil{
-		dc.Errorf("Error found %v", err)
-	} 
-
-	if err = db.Close(); err != nil{
+	if err != nil {
 		dc.Errorf("Error found %v", err)
 	}
-}*/
+}
 
-func TestClose(dc *testing.T){
-	//t.Errror()
-	if err = db.Close(); err != nil{
+func TestPreciseQuery(dc *testing.T) {
+	el, err := db.PreciseQuery(out.Longitude, out.Latitude, time.Now().UTC().Truncate(time.Hour*24).Unix())
+	if err != nil {
+		dc.Errorf("Error found %v", err)
+	} else {
+		dc.Logf("PreciseQuery returned: %+v", el)
+	}
+}
+
+func TestClose(dc *testing.T) {
+	if err := db.Close(); err != nil {
 		dc.Errorf("Error found %v", err)
 	}
 }
