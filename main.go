@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"ioutils"
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 var printDebug bool
@@ -42,66 +46,169 @@ func main() {
 		fmt.Printf("Was setup performed? %v\n", mod)
 	}
 
-	/*	var jsonExample []byte
-		{
-			file, err := os.Open("data_example.json")
-			if err != nil {
-				println(err.Error())
-				os.Exit(3)
-			}
-
-			if stat, err := file.Stat(); err == nil {
-				jsonExample = make([]byte, stat.Size())
-				file.Read(jsonExample)
-			} else {
-				println(err.Error())
-				os.Exit(4)
-			}
-			file.Close()
-		}
-		if printDebug {
-			println(string(jsonExample))
-		}
-
-		var out Data
-		if err = json.Unmarshal(jsonExample, &out); err != nil {
-			println(err.Error())
-			os.Exit(5)
-		}
-		if printDebug {
-			fmt.Printf("%+v\n", out)
-		}
-
-		db.Insert(out)*/
-
-	log.Fatalln(http.ListenAndServe(addr, nil).Error())
-}
-
-func query(resp http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
-		err := req.ParseForm()
-		if err != nil {
-			log.Println(err)
-		}
-
-		var day uint64
-		if daystr := req.PostForm.Get("day"); daystr != "" {
-			day, err = strconv.ParseUint(daystr, 10, 64)
+	//Query Handler
+	query := func(resp http.ResponseWriter, req *http.Request) {
+		if req.Method == "POST" {
+			err := req.ParseForm()
 			if err != nil {
 				log.Println(err)
-				resp.Write([]byte("Error: Day is not a number"))
+				resp.Write([]byte("Form not valid"))
 				return
 			}
-		} else {
-			resp.Write([]byte("Error: Day not present"))
-		}
 
-	} else {
-		b, err := resp.Write([]byte("Error: Wrong Method"))
-		if err != nil {
-			log.Println(err)
+			getFromForm := func(paramName string, out interface{}) error {
+				if str := req.PostForm.Get(paramName); str != "" {
+					t := reflect.TypeOf(out)
+					if t == nil {
+						return 1
+					}
+
+					if t.String() == "*uint64" {
+						if out == nil {
+							out = new(uint64)
+						}
+						*out, err = strconv.ParseUint(str, 10, 64)
+					} else if t.String() == "*float64" {
+						if out == nil {
+							out = new(float64)
+						}
+						*out, err = strconv.ParseFloat(longstr, 64)
+					} else {
+						return 2
+					}
+
+					if err != nil {
+						return err
+					}
+				} else {
+					log.Printf("%v not present\n", paramName)
+					resp.Write([]byte(fmt.Sprintf("Error: %v not present", paramName)))
+					return 3
+				}
+				return nil
+			}
+
+			var day uint64
+			getFromFunc("day", &day)
+			/*if daystr := req.PostForm.Get("day"); daystr != "" {
+				day, err = strconv.ParseUint(daystr, 10, 64)
+				if err != nil {
+					log.Println(err)
+					resp.Write([]byte("Error: Day is not a number"))
+					return
+				}
+			} else {
+				log.Println("Day not present")
+				resp.Write([]byte("Error: Day not present"))
+				return
+			}*/
+
+			var long float64
+			getFromFunc("long", &long)
+			/*if longstr := req.PostForm.Get("long"); longstr != "" {
+				long, err = strconv.ParseFloat(longstr, 64)
+				if err != nil {
+					log.Println(err)
+					resp.Write([]byte("Error: long is not a float"))
+					return
+				}
+			} else {
+				log.Println("long not present")
+				resp.Write([]byte("Error: long not present"))
+				return
+			}*/
+
+			var lat float64
+			getFromFunc("lat", &lat)
+			/*if latstr := req.PostForm.Get("lat"); latstr != "" {
+				lat, err = strconv.ParseFloat(latstr, 64)
+				if err != nil {
+					log.Println(err)
+					resp.Write([]byte("Error: lat is not a float"))
+					return
+				}
+			} else {
+				log.Println("lat not present")
+				resp.Write([]byte("Error: lat not present"))
+				return
+			}*/
+
+			var data interface{}
+			if rangestr := req.PostForm.Get("range"); rangestr != "" {
+				rng, err := strconv.ParseFloat(rangestr, 64)
+				if err != nil {
+					log.Println(err)
+					resp.Write([]byte("Error: lat is not a float"))
+					return
+				}
+
+				data, err = db.ApproximateQuery(long, lat, day, rng)
+			} else {
+				data, err = db.PreciseQuery(long, lat, day)
+			}
+			if err != nil {
+				resp.Write([]byte(err.Error()))
+				log.Println(err)
+				return
+			}
+
+			data, err = json.Marshal(data)
+			if err != nil {
+				resp.Write([]byte(err.Error()))
+				log.Println(err)
+			} else {
+				resp.Write(data.([]byte))
+			}
 		} else {
-			log.Printf("Written %v bytes succesfully", b)
+			_, err := resp.Write([]byte("Error: Wrong Method"))
+			if err != nil {
+				log.Println(err)
+			} else {
+				log.Println("Wrong Request Method")
+			}
 		}
 	}
+
+	//Insert Handler
+	insert := func(resp http.ResponseWriter, req *http.Request) {
+		if req.Method == "POST" {
+			body, err := ioutils.ReadAll(req.Body)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+				return
+			}
+
+			//TODO: Validate json
+
+			var inData Data
+			err = json.Unmarshal(body, &inData)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+				return
+			}
+
+			err = db.Insert(inData)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+			} else {
+				resp.Write([]byte("Ok"))
+				log.Println("json written correctly in database")
+			}
+
+		} else {
+			_, err := resp.Write([]byte("Error: Wrong Method"))
+			if err != nil {
+				log.Println(err)
+			} else {
+				log.Println("Wrong Request Method")
+			}
+		}
+	}
+
+	http.HandleFunc("/insert", insert)
+	http.HandleFunc("/query", query)
+	log.Fatalln(http.ListenAndServe(addr, nil).Error())
 }
