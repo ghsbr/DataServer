@@ -35,7 +35,7 @@ func NewDatabase(file string) (Database, bool, error) {
 	return Database{conn, sync.RWMutex{}}, mod, err
 }
 
-func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data, error) {
+func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idx, err := (func() (int64, error) {
@@ -65,7 +65,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	}
 
 	stmt, err := db.conn.Prepare(
-		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix())+" WHERE idx=?",
+		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day)+" WHERE idx=?",
 		idx,
 	)
 	if err != nil {
@@ -90,7 +90,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day time.Time) (Data
 	return ret, nil
 }
 
-func (db *Database) ApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
+func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
 	lowIdx := getIndexFromLongitude(long - rng)
 	if lowIdx == getIndexFromLongitude(long+rng) {
 		return db.actualApproximateQuery(long, lat, day, rng)
@@ -117,7 +117,7 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day time.Time, r
 	}
 }
 
-func (db *Database) actualApproximateQuery(long float64, lat float64, day time.Time, rng float64) ([]Data, error) {
+func (db *Database) actualApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
@@ -149,7 +149,7 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day time.T
 	}
 
 	stmt, err := db.conn.Prepare(
-		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", day.Truncate(time.Duration(time.Hour*24)).Unix()) + " WHERE idx=?",
+		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", day) + " WHERE idx=?",
 	)
 	if err != nil {
 		return nil, err
