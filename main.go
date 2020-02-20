@@ -221,6 +221,7 @@ func main() {
 
 	http.HandleFunc("/insert", insert)
 	http.HandleFunc("/query", query)
+	log.Printf("Trying to serve on address: %v\n", addr)
 	log.Fatalln(http.ListenAndServe(addr, nil).Error())
 }
 

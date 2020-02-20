@@ -289,7 +289,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
 	if printDebug {
 		println(time.Unix(today, 0).Format(time.UnixDate))
-		fmt.Printf("Creating: d%v", today)
+		fmt.Printf("Creating: d%v\n", today)
 	}
 
 	//Creo una tabella per la giornata in corso
