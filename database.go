@@ -241,6 +241,8 @@ func (db *Database) Insert(data Data) error {
 }
 
 func (db *Database) Close() error {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	return db.conn.Close()
 }
 
