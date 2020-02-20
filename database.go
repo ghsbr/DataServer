@@ -35,7 +35,7 @@ func NewDatabase(file string) (Database, bool, error) {
 	return Database{conn, sync.RWMutex{}}, mod, err
 }
 
-func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
+func (db *Database) PreciseQuery(long float64, lat float64, day uint64) (Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idx, err := (func() (int64, error) {
@@ -90,7 +90,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 	return ret, nil
 }
 
-func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
+func (db *Database) ApproximateQuery(long float64, lat float64, day uint64, rng float64) ([]Data, error) {
 	lowIdx := getIndexFromLongitude(long - rng)
 	if lowIdx == getIndexFromLongitude(long+rng) {
 		return db.actualApproximateQuery(long, lat, day, rng)
@@ -117,7 +117,7 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 	}
 }
 
-func (db *Database) actualApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
+func (db *Database) actualApproximateQuery(long float64, lat float64, day uint64, rng float64) ([]Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {

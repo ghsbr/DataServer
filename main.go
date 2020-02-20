@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"ioutils"
+	"ioutil"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 var printDebug bool
@@ -60,36 +59,40 @@ func main() {
 				if str := req.PostForm.Get(paramName); str != "" {
 					t := reflect.TypeOf(out)
 					if t == nil {
-						return 1
+						return TypeError{"Cannot get type of second parameter"}
 					}
 
 					if t.String() == "*uint64" {
 						if out == nil {
 							out = new(uint64)
 						}
-						*out, err = strconv.ParseUint(str, 10, 64)
+						typedOut := out.(*uint64)
+						*typedOut, err = strconv.ParseUint(str, 10, 64)
 					} else if t.String() == "*float64" {
 						if out == nil {
 							out = new(float64)
 						}
-						*out, err = strconv.ParseFloat(longstr, 64)
+						typedOut := out.(*float64)
+						*typedOut, err = strconv.ParseFloat(str, 64)
 					} else {
-						return 2
+						return TypeError{"Type of second parameter is not usable"}
 					}
 
 					if err != nil {
 						return err
 					}
 				} else {
-					log.Printf("%v not present\n", paramName)
-					resp.Write([]byte(fmt.Sprintf("Error: %v not present", paramName)))
-					return 3
+					return ParameterError{fmt.Sprintf("%v not present\n", paramName)}
 				}
 				return nil
 			}
 
 			var day uint64
-			getFromFunc("day", &day)
+			err = getFromForm("day", &day)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+			}
 			/*if daystr := req.PostForm.Get("day"); daystr != "" {
 				day, err = strconv.ParseUint(daystr, 10, 64)
 				if err != nil {
@@ -104,7 +107,11 @@ func main() {
 			}*/
 
 			var long float64
-			getFromFunc("long", &long)
+			err = getFromForm("long", &long)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+			}
 			/*if longstr := req.PostForm.Get("long"); longstr != "" {
 				long, err = strconv.ParseFloat(longstr, 64)
 				if err != nil {
@@ -119,7 +126,11 @@ func main() {
 			}*/
 
 			var lat float64
-			getFromFunc("lat", &lat)
+			err = getFromForm("lat", &lat)
+			if err != nil {
+				log.Println(err)
+				resp.Write([]byte(err.Error()))
+			}
 			/*if latstr := req.PostForm.Get("lat"); latstr != "" {
 				lat, err = strconv.ParseFloat(latstr, 64)
 				if err != nil {
@@ -172,7 +183,7 @@ func main() {
 	//Insert Handler
 	insert := func(resp http.ResponseWriter, req *http.Request) {
 		if req.Method == "POST" {
-			body, err := ioutils.ReadAll(req.Body)
+			body, err := ioutil.ReadAll(req.Body)
 			if err != nil {
 				log.Println(err)
 				resp.Write([]byte(err.Error()))
@@ -211,4 +222,20 @@ func main() {
 	http.HandleFunc("/insert", insert)
 	http.HandleFunc("/query", query)
 	log.Fatalln(http.ListenAndServe(addr, nil).Error())
+}
+
+type TypeError struct {
+	msg string
+}
+
+func (err TypeError) Error() string {
+	return err.msg
+}
+
+type ParameterError struct {
+	msg string
+}
+
+func (err ParameterError) Error() string {
+	return err.msg
 }
