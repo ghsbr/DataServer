@@ -10,7 +10,8 @@ import (
 var db Database
 
 func TestNewDatabase(dc *testing.T) {
-	db, _, err := NewDatabase(":memory:")
+	var err error
+	db, _, err = NewDatabase(":memory:")
 	if err != nil {
 		dc.Errorf("Error while creating Database: %v", err)
 	}
@@ -48,7 +49,29 @@ func TestPreciseQuery(dc *testing.T) {
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else {
-		dc.Logf("PreciseQuery returned: %+v", el)
+		dc.Logf("ApproximateQuery returned: %+v", el)
+	}
+}
+
+func TestApproximateQueryInRange(dc *testing.T) {
+	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, time.Now().UTC().Truncate(time.Hour*24).Unix(), 100)
+	if err != nil {
+		dc.Errorf("Error found %v", err)
+	} else if len(els) > 0 {
+		dc.Logf("ApproximateQuery returned: %+v", els)
+	} else {
+		dc.Error("ApproximateQuery didn't return a Data")
+	}
+}
+
+func TestApproximateQueryOutOfRange(dc *testing.T) {
+	els, err := db.ApproximateQuery(out.Longitude-50, out.Latitude+50, time.Now().UTC().Truncate(time.Hour*24).Unix(), 100)
+	if err != nil {
+		dc.Errorf("Error found %v", err)
+	} else if len(els) > 0 {
+		dc.Logf("ApproximateQuery returned: %+v", els)
+	} else {
+		dc.Error("ApproximateQuery didn't return a Data")
 	}
 }
 
