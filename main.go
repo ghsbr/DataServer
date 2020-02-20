@@ -62,12 +62,12 @@ func main() {
 						return TypeError{"Cannot get type of second parameter"}
 					}
 
-					if t.String() == "*uint64" {
+					if t.String() == "*int64" {
 						if out == nil {
 							out = new(uint64)
 						}
-						typedOut := out.(*uint64)
-						*typedOut, err = strconv.ParseUint(str, 10, 64)
+						typedOut := out.(*int64)
+						*typedOut, err = strconv.ParseInt(str, 10, 64)
 					} else if t.String() == "*float64" {
 						if out == nil {
 							out = new(float64)
@@ -87,7 +87,7 @@ func main() {
 				return nil
 			}
 
-			var day uint64
+			var day int64
 			err = getFromForm("day", &day)
 			if err != nil {
 				log.Println(err)
