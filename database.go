@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -271,7 +272,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 		var i int64
 		for i = 0; i < 360; i += 5 {
 			if printDebug {
-				fmt.Printf("Creating: long%v for %v\n", i, i-180)
+				log.Printf("Creating: long%v for %v\n", i, i-180)
 			}
 			err = db.Exec("CREATE TABLE long" + fmt.Sprintf("%v", i) + ` (
 	long REAL,
@@ -289,7 +290,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
 	if printDebug {
 		println(time.Unix(today, 0).Format(time.UnixDate))
-		fmt.Printf("Creating: d%v\n", today)
+		log.Printf("Creating: d%v\n", today)
 	}
 
 	//Creo una tabella per la giornata in corso
