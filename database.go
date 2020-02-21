@@ -122,6 +122,7 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day int64,
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
+		log.Printf("%v\t%v\n", long-rng, getIndexFromLongitude(long-rng))
 		stmt, err := db.conn.Prepare(
 			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long-rng))+" WHERE long>=? AND long<=? AND lat>=? AND lat<=?",
 			long-rng, long+rng, lat-rng, lat+rng,
