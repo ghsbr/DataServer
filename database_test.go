@@ -49,7 +49,7 @@ func TestPreciseQuery(dc *testing.T) {
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else {
-		dc.Logf("ApproximateQuery returned: %+v", el)
+		dc.Logf("PreciseQuery returned: %+v", el)
 	}
 }
 
