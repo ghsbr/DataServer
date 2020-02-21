@@ -1,8 +1,7 @@
-package main
+package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -39,7 +38,6 @@ func (out *Data) UnmarshalJSON(toParse []byte) error {
 	if err := json.Unmarshal(toParse, &dataMap); err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", dataMap)
 
 	timeobj, err := time.Parse(time.RFC3339, dataMap.Ts)
 	if err != nil {

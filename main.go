@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/ghsbr/DataServer/data"
+	"github.com/ghsbr/DataServer/database"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,6 +15,11 @@ import (
 )
 
 var printDebug bool
+
+type (
+	Data     = data.Data
+	Database = database.Database
+)
 
 func main() {
 	var addr string
@@ -36,7 +43,7 @@ func main() {
 		println("Debug Messages on")
 	}
 
-	db, mod, err := NewDatabase( /*"data.db"*/ ":memory:")
+	db, mod, err := database.NewDatabase( /*"data.db"*/ ":memory:")
 	if err != nil {
 		log.Fatalln(err)
 	}

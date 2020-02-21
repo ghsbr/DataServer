@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"fmt"
@@ -8,10 +8,14 @@ import (
 	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
+	"github.com/ghsbr/DataServer/data"
+	//"github.com/ghsbr/DataServer"
 	//"github.com/cespare/xxhash"
 )
 
 const longPerTable = 5
+
+type Data = data.Data
 
 //uno struct che fa da man-in-the-middle per il database
 type Database struct {
@@ -66,7 +70,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 	}
 
 	stmt, err := db.conn.Prepare(
-		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", day)+" WHERE idx=?",
+		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", truncateTime(day))+" WHERE idx=?",
 		idx,
 	)
 	if err != nil {
@@ -92,22 +96,28 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 }
 
 func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
-	lowIdx := getIndexFromLongitude(long - rng)
-	if lowIdx == getIndexFromLongitude(long+rng) {
-		return db.actualApproximateQuery(long, lat, day, rng)
+	log.Printf("%v %v\t%v %v\n", long, rng, long-rng, long+rng)
+	day = truncateTime(day)
+	if getIndexFromLongitude(long-rng) == getIndexFromLongitude(long+rng) {
+		log.Println("Single thing")
+		return db.actualApproximateQuery(long-rng, long+rng, lat, rng, day)
 	} else {
 		ret, err := db.actualApproximateQuery(
 			long-rng,
-			float64(lowIdx+longPerTable),
-			day, math.Abs(long-math.Trunc(long)),
+			180,
+			lat,
+			longPerTable,
+			day,
 		)
 		if err != nil {
 			return nil, err
 		}
 
 		upperLimit := long + rng
-		for i := float64(lowIdx + longPerTable); i <= upperLimit; i += longPerTable {
-			part, err := db.actualApproximateQuery(i, math.Min(i+longPerTable, upperLimit), day, i-math.Min(i+longPerTable, upperLimit))
+		//i: Indice alla tabella dopo
+		for i := float64(getIndexFromLongitude(long-rng) - 180 + longPerTable); i <= upperLimit; i += longPerTable {
+			log.Printf("%v %v\n", i, i+longPerTable)
+			part, err := db.actualApproximateQuery(i, math.Min(i+longPerTable, upperLimit), lat, rng, day)
 			if err != nil {
 				return nil, err
 			}
@@ -118,14 +128,13 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 	}
 }
 
-func (db *Database) actualApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
+func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat float64, latrng float64, day int64) ([]Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 	idxs, err := (func() ([]int64, error) {
-		log.Printf("%v\t%v\n", long-rng, getIndexFromLongitude(long-rng))
 		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long-rng))+" WHERE long>=? AND long<=? AND lat>=? AND lat<=?",
-			long-rng, long+rng, lat-rng, lat+rng,
+			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(longMin))+" WHERE long>=? AND long<=? AND lat>=? AND lat<=?",
+			longMin, longMax, lat-latrng, lat+latrng,
 		)
 		if err != nil {
 			return nil, err
@@ -140,16 +149,17 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day int64,
 				break
 			}
 		}
-		if err != nil {
-			return nil, err
-		}
 
 		return idxs, nil
 	})()
 	if err != nil {
 		return nil, err
 	}
+	if len(idxs) == 0 {
+		return nil, nil
+	}
 
+	log.Printf("%v", idxs)
 	stmt, err := db.conn.Prepare(
 		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", day) + " WHERE idx=?",
 	)
@@ -159,20 +169,20 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day int64,
 	defer stmt.Close()
 
 	ret := make([]Data, 0)
-	for idx := range idxs {
+	for _, idx := range idxs {
 		err = stmt.Bind(idx)
 		if err != nil {
-			break
+			return nil, err
 		}
 
 		next, err := stmt.Step()
 		if err != nil {
-			break
+			return nil, err
 		}
 		if !next {
-			/*err = NotFoundError{fmt.Sprintf("Station %v not found", idx)}
-			break*/
-			continue
+			err = NotFoundError{fmt.Sprintf("Station %v not found", idx)}
+			return nil, err
+			//continue
 		}
 
 		var station Data
@@ -184,7 +194,7 @@ func (db *Database) actualApproximateQuery(long float64, lat float64, day int64,
 
 		err = stmt.Reset()
 		if err != nil {
-			break
+			return nil, err
 		}
 	}
 	if err != nil {
@@ -233,11 +243,17 @@ func (db *Database) Insert(data Data) error {
 		}
 	}
 
-	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
 	err = db.conn.Exec(
-		"INSERT OR REPLACE INTO d"+fmt.Sprintf("%v", today)+" VALUES (?, ?, ?, ?, ?, ?)",
+		"INSERT OR REPLACE INTO d"+fmt.Sprintf("%v", truncateTime(data.Ts))+" VALUES (?, ?, ?, ?, ?, ?)",
 		id, data.Ts, data.Longitude, data.Latitude, data.Pm25Aqi, data.Temperature,
 	)
+	if errv, ok := err.(*sqlite3.Error); ok && errv.Code() == 1 {
+		createTimeNamedTable(db, data.Ts)
+		err = db.conn.Exec(
+			"INSERT OR REPLACE INTO d"+fmt.Sprintf("%v", truncateTime(data.Ts))+" VALUES (?, ?, ?, ?, ?, ?)",
+			id, data.Ts, data.Longitude, data.Latitude, data.Pm25Aqi, data.Temperature,
+		)
+	}
 	return err
 }
 
@@ -245,6 +261,20 @@ func (db *Database) Close() error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 	return db.conn.Close()
+}
+
+func createTimeNamedTable(db *Database, time int64) error {
+	//Creo una tabella per la giornata in corso
+	db.conn.Exec("CREATE TABLE d" + fmt.Sprintf("%v", truncateTime(time)) + ` (
+	idx INTEGER,
+	time INTEGER,
+	long REAL,
+	lat REAL,
+	pm25_concentration REAL,
+	temperature INTEGER,
+	PRIMARY KEY(idx, time)
+)`)
+	return nil
 }
 
 func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
@@ -272,11 +302,7 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 
 	//Creo una tabella ogni 5 "gradi"
 	{
-		var i int64
-		for i = 0; i < 360; i += 5 {
-			if printDebug {
-				log.Printf("Creating: long%v for %v\n", i, i-180)
-			}
+		for i := 0; i < 360; i += 5 {
 			err = db.Exec("CREATE TABLE long" + fmt.Sprintf("%v", i) + ` (
 	long REAL,
 	lat REAL,
@@ -288,33 +314,16 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 			}
 		}
 	}
-
-	//Ottengo l'unix timestamp per la giornata di oggi
-	today := time.Now().UTC().Truncate(time.Duration(time.Hour * 24)).Unix()
-	if printDebug {
-		println(time.Unix(today, 0).Format(time.UnixDate))
-		log.Printf("Creating: d%v\n", today)
-	}
-
-	//Creo una tabella per la giornata in corso
-	err = db.Exec("CREATE TABLE d" + fmt.Sprintf("%v", today) + ` (
-	idx INTEGER,
-	time INTEGER,
-	long REAL,
-	lat REAL,
-	pm25_concentration REAL,
-	temperature INTEGER,
-	PRIMARY KEY(idx, time)
-)`)
-	if err != nil {
-		return true, err
-	}
 	return true, nil
 }
 
 func getIndexFromLongitude(long float64) int64 {
-	posIdx := int64(long + 180)
+	posIdx := int64(math.Trunc(long + 180))
 	return posIdx - posIdx%longPerTable
+}
+
+func truncateTime(timestamp int64) int64 {
+	return time.Unix(timestamp, 0).Truncate(time.Hour * 24).Unix()
 }
 
 type NotFoundError struct {

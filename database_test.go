@@ -2,22 +2,23 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/ghsbr/DataServer/data"
+	"github.com/ghsbr/DataServer/database"
 	"os"
 	"testing"
-	"time"
 )
 
-var db Database
+var db database.Database
 
 func TestNewDatabase(dc *testing.T) {
 	var err error
-	db, _, err = NewDatabase("test.db")
+	db, _, err = database.NewDatabase(":memory:")
 	if err != nil {
 		dc.Errorf("Error while creating Database: %v", err)
 	}
 }
 
-var out Data
+var out data.Data
 
 func TestInsert(dc *testing.T) {
 	var jsonExample []byte
@@ -45,7 +46,7 @@ func TestInsert(dc *testing.T) {
 }
 
 func TestPreciseQuery(dc *testing.T) {
-	el, err := db.PreciseQuery(out.Longitude, out.Latitude, time.Now().UTC().Truncate(time.Hour*24).Unix())
+	el, err := db.PreciseQuery(out.Longitude, out.Latitude, out.Ts)
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else {
@@ -54,7 +55,7 @@ func TestPreciseQuery(dc *testing.T) {
 }
 
 func TestApproximateQueryInRange(dc *testing.T) {
-	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, time.Now().UTC().Truncate(time.Hour*24).Unix(), 4)
+	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, out.Ts, 3)
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else if len(els) > 0 {
@@ -65,7 +66,7 @@ func TestApproximateQueryInRange(dc *testing.T) {
 }
 
 func TestApproximateQueryOutOfRange(dc *testing.T) {
-	els, err := db.ApproximateQuery(out.Longitude-50, out.Latitude+50, time.Now().UTC().Truncate(time.Hour*24).Unix(), 100)
+	els, err := db.ApproximateQuery(out.Longitude-50, out.Latitude+50, out.Ts, 100)
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else if len(els) > 0 {
