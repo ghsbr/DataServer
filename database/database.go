@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"math"
 	"sync"
 	"time"
@@ -96,14 +96,15 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 }
 
 func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
-	log.Printf("%v %v\t%v %v\n", long, rng, long-rng, long+rng)
+	//log.Printf("%v %v\t%v %v\n", long, rng, long-rng, long+rng)
 	day = truncateTime(day)
 	if getIndexFromLongitude(long-rng) == getIndexFromLongitude(long+rng) {
-		log.Println("Single thing")
 		return db.actualApproximateQuery(long-rng, long+rng, lat, rng, day)
 	} else {
+		lowerLimit := math.Max(long-rng, -180)
+		//log.Printf("%v %v\n", lowerLimit, 180)
 		ret, err := db.actualApproximateQuery(
-			long-rng,
+			lowerLimit,
 			180,
 			lat,
 			longPerTable,
@@ -115,8 +116,8 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 
 		upperLimit := long + rng
 		//i: Indice alla tabella dopo
-		for i := float64(getIndexFromLongitude(long-rng) - 180 + longPerTable); i <= upperLimit; i += longPerTable {
-			log.Printf("%v %v\n", i, i+longPerTable)
+		for i := float64(getIndexFromLongitude(lowerLimit) - 180 + longPerTable); i <= upperLimit && i < 180; i += longPerTable {
+			//log.Printf("%v %v\n", i, i+longPerTable)
 			part, err := db.actualApproximateQuery(i, math.Min(i+longPerTable, upperLimit), lat, rng, day)
 			if err != nil {
 				return nil, err
@@ -159,7 +160,7 @@ func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat
 		return nil, nil
 	}
 
-	log.Printf("%v", idxs)
+	//log.Printf("%v", idxs)
 	stmt, err := db.conn.Prepare(
 		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", day) + " WHERE idx=?",
 	)

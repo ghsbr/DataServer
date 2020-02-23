@@ -53,7 +53,35 @@ func main() {
 	}
 
 	//Query Handler
-	query := func(resp http.ResponseWriter, req *http.Request) {
+	query := makeQuery(&db)
+
+	//Insert Handler
+	insert := makeInsert(&db)
+
+	http.HandleFunc("/insert", insert)
+	http.HandleFunc("/query", query)
+	log.Printf("Trying to serve on address: %v\n", addr)
+	log.Fatalln(http.ListenAndServe(addr, nil).Error())
+}
+
+type TypeError struct {
+	msg string
+}
+
+func (err TypeError) Error() string {
+	return err.msg
+}
+
+type ParameterError struct {
+	msg string
+}
+
+func (err ParameterError) Error() string {
+	return err.msg
+}
+
+func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
+	return func(resp http.ResponseWriter, req *http.Request) {
 		if req.Method == "POST" {
 			err := req.ParseForm()
 			if err != nil {
@@ -100,18 +128,6 @@ func main() {
 				log.Println(err)
 				resp.Write([]byte(err.Error()))
 			}
-			/*if daystr := req.PostForm.Get("day"); daystr != "" {
-				day, err = strconv.ParseUint(daystr, 10, 64)
-				if err != nil {
-					log.Println(err)
-					resp.Write([]byte("Error: Day is not a number"))
-					return
-				}
-			} else {
-				log.Println("Day not present")
-				resp.Write([]byte("Error: Day not present"))
-				return
-			}*/
 
 			var long float64
 			err = getFromForm("long", &long)
@@ -119,18 +135,6 @@ func main() {
 				log.Println(err)
 				resp.Write([]byte(err.Error()))
 			}
-			/*if longstr := req.PostForm.Get("long"); longstr != "" {
-				long, err = strconv.ParseFloat(longstr, 64)
-				if err != nil {
-					log.Println(err)
-					resp.Write([]byte("Error: long is not a float"))
-					return
-				}
-			} else {
-				log.Println("long not present")
-				resp.Write([]byte("Error: long not present"))
-				return
-			}*/
 
 			var lat float64
 			err = getFromForm("lat", &lat)
@@ -138,31 +142,21 @@ func main() {
 				log.Println(err)
 				resp.Write([]byte(err.Error()))
 			}
-			/*if latstr := req.PostForm.Get("lat"); latstr != "" {
-				lat, err = strconv.ParseFloat(latstr, 64)
-				if err != nil {
-					log.Println(err)
-					resp.Write([]byte("Error: lat is not a float"))
-					return
-				}
-			} else {
-				log.Println("lat not present")
-				resp.Write([]byte("Error: lat not present"))
-				return
-			}*/
 
 			var data interface{}
-			if rangestr := req.PostForm.Get("range"); rangestr != "" {
-				rng, err := strconv.ParseFloat(rangestr, 64)
-				if err != nil {
-					log.Println(err)
-					resp.Write([]byte("Error: lat is not a float"))
-					return
-				}
-
-				data, err = db.ApproximateQuery(long, lat, day, rng)
-			} else {
+			var rng float64
+			if err = getFromForm("range", &rng); err != nil {
+				log.Printf(
+					"Performing PreciseQuery on {Ts: %v, Long: %v, Lat: %v}\n",
+					day, long, lat,
+				)
 				data, err = db.PreciseQuery(long, lat, day)
+			} else {
+				log.Printf(
+					"Performing ApproximateQuery on {Ts: %v, Long: %v, Lat: %v, Range: %v}\n",
+					day, long, lat, rng,
+				)
+				data, err = db.ApproximateQuery(long, lat, day, rng)
 			}
 			if err != nil {
 				resp.Write([]byte(err.Error()))
@@ -186,9 +180,10 @@ func main() {
 			}
 		}
 	}
+}
 
-	//Insert Handler
-	insert := func(resp http.ResponseWriter, req *http.Request) {
+func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
+	return func(resp http.ResponseWriter, req *http.Request) {
 		if req.Method == "POST" {
 			body, err := ioutil.ReadAll(req.Body)
 			if err != nil {
@@ -213,7 +208,7 @@ func main() {
 				resp.Write([]byte(err.Error()))
 			} else {
 				resp.Write([]byte("Ok"))
-				log.Println("json written correctly in database")
+				log.Println("json written correctly to database")
 			}
 
 		} else {
@@ -225,25 +220,4 @@ func main() {
 			}
 		}
 	}
-
-	http.HandleFunc("/insert", insert)
-	http.HandleFunc("/query", query)
-	log.Printf("Trying to serve on address: %v\n", addr)
-	log.Fatalln(http.ListenAndServe(addr, nil).Error())
-}
-
-type TypeError struct {
-	msg string
-}
-
-func (err TypeError) Error() string {
-	return err.msg
-}
-
-type ParameterError struct {
-	msg string
-}
-
-func (err ParameterError) Error() string {
-	return err.msg
 }

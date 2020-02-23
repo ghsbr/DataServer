@@ -1,11 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/ghsbr/DataServer/data"
-	"github.com/ghsbr/DataServer/database"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"testing"
+
+	"github.com/ghsbr/DataServer/data"
+	"github.com/ghsbr/DataServer/database"
 )
 
 var db database.Database
@@ -19,9 +25,9 @@ func TestNewDatabase(dc *testing.T) {
 }
 
 var out data.Data
+var jsonExample []byte
 
 func TestInsert(dc *testing.T) {
-	var jsonExample []byte
 	{
 		file, err := os.Open("data_example.json")
 		if err != nil {
@@ -80,4 +86,81 @@ func TestClose(dc *testing.T) {
 	if err := db.Close(); err != nil {
 		dc.Errorf("Error found %v", err)
 	}
+}
+
+func TestMain(dc *testing.T) {
+	const addr string = "127.0.0.1:8080"
+	dc.Run(
+		"Insertion test",
+		func(test *testing.T) {
+			resp, err := http.Post("http://"+addr+"/insert", "application/json", bytes.NewReader(jsonExample))
+			if err != nil {
+				dc.Fatalf("%v", err)
+			} else {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					dc.Fatalf("%v", err)
+				} else {
+					dc.Log(string(body))
+				}
+			}
+		},
+	)
+
+	form := url.Values(make(map[string][]string))
+	form.Set("long", fmt.Sprintf("%v", out.Longitude))
+	form.Set("lat", fmt.Sprintf("%v", out.Latitude))
+	form.Set("day", fmt.Sprintf("%v", out.Ts))
+	dc.Run(
+		"PreciseQuery test",
+		func(test *testing.T) {
+			resp, err := http.PostForm("http://"+addr+"/query", form)
+			if err != nil {
+				dc.Errorf("%v", err)
+			} else {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					dc.Errorf("%v", err)
+				} else {
+					dc.Log(string(body))
+				}
+			}
+		},
+	)
+
+	form.Set("range", "3")
+	dc.Run(
+		"ApproximateQuery In Range test",
+		func(test *testing.T) {
+			resp, err := http.PostForm("http://"+addr+"/query", form)
+			if err != nil {
+				dc.Errorf("%v", err)
+			} else {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					dc.Errorf("%v", err)
+				} else {
+					dc.Log(string(body))
+				}
+			}
+		},
+	)
+
+	form.Set("range", "100")
+	dc.Run(
+		"ApproximateQuery Out of Range test",
+		func(test *testing.T) {
+			resp, err := http.PostForm("http://"+addr+"/query", form)
+			if err != nil {
+				dc.Errorf("%v", err)
+			} else {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					dc.Errorf("%v", err)
+				} else {
+					dc.Log(string(body))
+				}
+			}
+		},
+	)
 }
