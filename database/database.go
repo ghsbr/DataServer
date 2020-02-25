@@ -5,18 +5,20 @@ import (
 	"log"
 	"math"
 	"sync"
-	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
+	"github.com/cespare/xxhash"
 	"github.com/ghsbr/DataServer/data"
-	//"github.com/cespare/xxhash"
 )
 
 const longPerTable = 5
 
 type Data = data.Data
 
-var Log *log.Logger
+var (
+	Log    *log.Logger
+	hasher = xxhash.New()
+)
 
 func SetLogger(mainLog *log.Logger) {
 	Log = log.New(mainLog.Writer(), "[DataServer/Database] ", mainLog.Flags())
@@ -48,30 +50,14 @@ func NewDatabase(file string) (Database, bool, error) {
 func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
-	idx, err := (func() (int64, error) {
-		stmt, err := db.conn.Prepare(
-			"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(long))+" WHERE long=? AND lat=?",
-			long, lat,
-		)
-		defer stmt.Close()
-		if err != nil {
-			return 0, err
-		}
-
-		next, err := stmt.Step()
-		if err != nil {
-			return 0, err
-		}
-		if !next {
-			return 0, NotFoundError{"Station not Found"}
-		}
-
-		var idx int64
-		err = stmt.Scan(&idx)
-		return idx, err
-	})()
-	if err != nil {
-		return Data{}, err
+	var idx uint64
+	{
+		bytes := floatToBytes(long)
+		hasher.Sum(bytes[:])
+		bytes = floatToBytes(lat)
+		hasher.Sum(bytes[:])
+		idx = hasher.Sum64()
+		hasher.Reset()
 	}
 
 	stmt, err := db.conn.Prepare(
@@ -227,19 +213,20 @@ func (db *Database) Insert(data Data) error {
 		return err
 	}
 
-	var id int64
+	var id uint64
 	if next {
 		err = stmt.Scan(&id)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = db.conn.Exec("INSERT INTO ids VALUES (NULL)")
-		if err != nil {
-			return err
-		}
+		bytes := floatToBytes(data.Longitude)
+		hasher.Sum(bytes[:])
+		bytes = floatToBytes(data.Latitude)
+		hasher.Sum(bytes[:])
+		id = hasher.Sum64()
+		hasher.Reset()
 
-		id = db.conn.LastInsertRowID()
 		err = db.conn.Exec(
 			"INSERT INTO long"+fmt.Sprintf("%v", getIndexFromLongitude(data.Longitude))+" VALUES (?, ?, ?)",
 			data.Longitude, data.Latitude, id,
@@ -285,7 +272,7 @@ func createTimeNamedTable(db *Database, time int64) error {
 
 func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	//Prepariamo la query SQL
-	stmt, err := db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ids'")
+	stmt, err := db.Prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='long0'")
 	if err != nil {
 		return false, err
 	}
@@ -302,9 +289,9 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 	}
 
 	//Creo una tabella per generare
-	db.Exec(`CREATE TABLE ids (
-	id INTEGER PRIMARY KEY ASC AUTOINCREMENT
-)`)
+	/*	db.Exec(`CREATE TABLE ids (
+		id INTEGER PRIMARY KEY ASC AUTOINCREMENT
+	)`)*/
 
 	//Creo una tabella ogni 5 "gradi"
 	{
@@ -321,21 +308,4 @@ func performOneTimeSetup(db *sqlite3.Conn) (bool, error) {
 		}
 	}
 	return true, nil
-}
-
-func getIndexFromLongitude(long float64) int64 {
-	posIdx := int64(math.Trunc(long + 180))
-	return posIdx - posIdx%longPerTable
-}
-
-func truncateTime(timestamp int64) int64 {
-	return time.Unix(timestamp, 0).Truncate(time.Hour * 24).Unix()
-}
-
-type NotFoundError struct {
-	msg string
-}
-
-func (e NotFoundError) Error() string {
-	return e.msg
 }
