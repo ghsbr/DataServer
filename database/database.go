@@ -32,31 +32,32 @@ type Database struct {
 
 //costruttore della classe Database
 //ritorna un errore, se esiste, e un oggetto database
-func NewDatabase(file string) (Database, bool, error) {
+func NewDatabase(file string, mainLog *log.Logger) (*Database, bool, error) {
+	SetLogger(mainLog)
 	conn, err := sqlite3.Open(file)
 	if err != nil {
-		return Database{nil, sync.RWMutex{}}, false, err
+		return &Database{nil, sync.RWMutex{}}, false, err
 	}
 
 	mod, err := performOneTimeSetup(conn)
 	if err != nil {
 		conn.Close()
-		return Database{nil, sync.RWMutex{}}, false, err
+		return &Database{nil, sync.RWMutex{}}, false, err
 	}
 
-	return Database{conn, sync.RWMutex{}}, mod, err
+	return &Database{conn, sync.RWMutex{}}, mod, err
 }
 
 func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
-	var idx uint64
+	var idx int64
 	{
 		bytes := floatToBytes(long)
 		hasher.Sum(bytes[:])
 		bytes = floatToBytes(lat)
 		hasher.Sum(bytes[:])
-		idx = hasher.Sum64()
+		idx = int64(hasher.Sum64())
 		hasher.Reset()
 	}
 
@@ -106,7 +107,13 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 		}
 
 		upperLimit := long + rng
-		//i: Indice alla tabella dopo
+		//i: Coordinata alla tabella dopo
+		/*func getIndexFromLongitude(long float64) int64 {
+			posIdx := int64(math.Trunc(long + 180))
+			return posIdx - posIdx%longPerTable
+		}*/
+		//truncCoord := int64(math.Trunc(lowerLimit))
+		//Log.Printf("%v should be equal to %v\n", float64(truncCoord+(truncCoord%longPerTable)), getIndexFromLongitude(lowerLimit)-180+longPerTable)
 		for i := float64(getIndexFromLongitude(lowerLimit) - 180 + longPerTable); i <= upperLimit && i < 180; i += longPerTable {
 			Log.Printf("%v %v\n", i, i+longPerTable)
 			part, err := db.actualApproximateQuery(i, math.Min(i+longPerTable, upperLimit), lat, rng, day)
@@ -213,7 +220,7 @@ func (db *Database) Insert(data Data) error {
 		return err
 	}
 
-	var id uint64
+	var id int64
 	if next {
 		err = stmt.Scan(&id)
 		if err != nil {
@@ -224,7 +231,7 @@ func (db *Database) Insert(data Data) error {
 		hasher.Sum(bytes[:])
 		bytes = floatToBytes(data.Latitude)
 		hasher.Sum(bytes[:])
-		id = hasher.Sum64()
+		id = int64(hasher.Sum64())
 		hasher.Reset()
 
 		err = db.conn.Exec(

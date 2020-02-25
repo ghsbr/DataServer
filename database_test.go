@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,11 +15,11 @@ import (
 	"github.com/ghsbr/DataServer/database"
 )
 
-var db database.Database
+var db *database.Database
 
 func TestNewDatabase(dc *testing.T) {
 	var err error
-	db, _, err = database.NewDatabase(":memory:")
+	db, _, err = database.NewDatabase(":memory:", log.New(os.Stdout, "[DataServer] ", 0))
 	if err != nil {
 		dc.Errorf("Error while creating Database: %v", err)
 	}
@@ -61,7 +62,7 @@ func TestPreciseQuery(dc *testing.T) {
 }
 
 func TestApproximateQueryInRange(dc *testing.T) {
-	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, out.Ts, 3)
+	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, out.Ts, 1)
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else if len(els) > 0 {
@@ -128,7 +129,7 @@ func TestMain(dc *testing.T) {
 		},
 	)
 
-	form.Set("range", "3")
+	form.Set("range", "1")
 	dc.Run(
 		"ApproximateQuery In Range test",
 		func(test *testing.T) {

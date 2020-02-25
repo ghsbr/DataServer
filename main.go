@@ -43,9 +43,8 @@ func main() {
 	} else {
 		Log = log.New(ioutil.Discard, "", 0)
 	}
-	database.SetLogger(Log)
 
-	db, mod, err := database.NewDatabase("data.db")
+	db, mod, err := database.NewDatabase("data.db", Log)
 	if err != nil {
 		Log.Fatalln(err)
 	}
@@ -53,10 +52,10 @@ func main() {
 	Log.Printf("Was setup performed? %v\n", mod)
 
 	//Query Handler
-	query := makeQuery(&db)
+	query := makeQuery(db)
 
 	//Insert Handler
-	insert := makeInsert(&db)
+	insert := makeInsert(db)
 
 	http.HandleFunc("/insert", insert)
 	http.HandleFunc("/query", query)
