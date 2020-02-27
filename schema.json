@@ -1,0 +1,82 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "ts",
+    "pm25",
+    "temperature",
+    "coordinates"
+  ],
+  "properties": {
+    "ts": {
+      "$id": "#/properties/ts",
+      "type": "string",
+      "title": "The Ts Schema",
+      "default": "",
+      "examples": [
+        "2020-01-15T21:00:00.000Z"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "pm25": {
+      "$id": "#/properties/pm25",
+      "type": "object",
+      "title": "The Pm25 Schema",
+      "required": [
+        "aqi"
+      ],
+      "properties": {
+        "aqi": {
+          "$id": "#/properties/pm25/properties/aqi",
+          "type": "integer",
+          "title": "The Aqi Schema",
+          "default": 0,
+          "examples": [
+            421
+          ]
+        }
+      }
+    },
+    "temperature": {
+      "$id": "#/properties/temperature",
+      "type": "integer",
+      "title": "The Temperature Schema",
+      "default": 0,
+      "examples": [
+        17
+      ]
+    },
+    "coordinates": {
+      "$id": "#/properties/coordinates",
+      "type": "object",
+      "title": "The Coordinates Schema",
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "properties": {
+        "latitude": {
+          "$id": "#/properties/coordinates/properties/latitude",
+          "type": "number",
+          "title": "The Latitude Schema",
+          "default": 0.0,
+          "examples": [
+            23.79611913
+          ]
+        },
+        "longitude": {
+          "$id": "#/properties/coordinates/properties/longitude",
+          "type": "number",
+          "title": "The Longitude Schema",
+          "default": 0.0,
+          "examples": [
+            90.41756094
+          ]
+        }
+      }
+    }
+  }
+}

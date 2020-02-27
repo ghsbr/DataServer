@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ghsbr/DataServer/data"
 	"github.com/ghsbr/DataServer/database"
+	"github.com/qri-io/jsonschema"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,7 +15,92 @@ import (
 	"strconv"
 )
 
-var Log *log.Logger
+var (
+	Log       *log.Logger
+	schema    jsonschema.RootSchema
+	rawSchema []byte = []byte(`{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "ts",
+    "pm25",
+    "temperature",
+    "coordinates"
+  ],
+  "properties": {
+    "ts": {
+      "$id": "#/properties/ts",
+      "type": "string",
+      "title": "The Ts Schema",
+      "default": "",
+      "examples": [
+        "2020-01-15T21:00:00.000Z"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "pm25": {
+      "$id": "#/properties/pm25",
+      "type": "object",
+      "title": "The Pm25 Schema",
+      "required": [
+        "aqi"
+      ],
+      "properties": {
+        "aqi": {
+          "$id": "#/properties/pm25/properties/aqi",
+          "type": "integer",
+          "title": "The Aqi Schema",
+          "default": 0,
+          "examples": [
+            421
+          ]
+        }
+      }
+    },
+    "temperature": {
+      "$id": "#/properties/temperature",
+      "type": "integer",
+      "title": "The Temperature Schema",
+      "default": 0,
+      "examples": [
+        17
+      ]
+    },
+    "coordinates": {
+      "$id": "#/properties/coordinates",
+      "type": "object",
+      "title": "The Coordinates Schema",
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "properties": {
+        "latitude": {
+          "$id": "#/properties/coordinates/properties/latitude",
+          "type": "number",
+          "title": "The Latitude Schema",
+          "default": 0.0,
+          "examples": [
+            23.79611913
+          ]
+        },
+        "longitude": {
+          "$id": "#/properties/coordinates/properties/longitude",
+          "type": "number",
+          "title": "The Longitude Schema",
+          "default": 0.0,
+          "examples": [
+            90.41756094
+          ]
+        }
+      }
+    }
+  }
+}`)
+)
 
 type (
 	Data     = data.Data
@@ -23,7 +109,7 @@ type (
 
 func main() {
 	addr := flag.String(
-		"addr", ":memory:", //127.0.0.1
+		"addr", "localhost:8080",
 		" at which the requests will be served",
 	)
 
@@ -50,6 +136,11 @@ func main() {
 	}
 	defer db.Close()
 	Log.Printf("Was setup performed? %v\n", mod)
+
+	err = json.Unmarshal(rawSchema, &schema)
+	if err != nil {
+		Log.Fatalln(err)
+	}
 
 	//Query Handler
 	query := makeQuery(db)
@@ -175,7 +266,25 @@ func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 
-			//TODO: Validate json
+			{
+				errs, err := schema.ValidateBytes(body)
+				if err != nil {
+					Log.Println(err)
+					resp.Write([]byte("Bad JSON:\n" + err.Error()))
+					return
+				}
+				if len(errs) > 0 {
+					Log.Println("Bad JSON:")
+					resp.Write([]byte("Bad JSON:\n"))
+					for _, err = range errs[:len(errs)-1] {
+						Log.Println(err)
+						resp.Write([]byte(err.Error() + "\n"))
+					}
+					Log.Println(err)
+					resp.Write([]byte(err.Error()))
+					return
+				}
+			}
 
 			var inData Data
 			err = json.Unmarshal(body, &inData)
