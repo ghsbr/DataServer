@@ -23,7 +23,7 @@ type (
 
 func main() {
 	addr := flag.String(
-		"addr", "127.0.0.1:8080",
+		"addr", ":memory:", //127.0.0.1
 		" at which the requests will be served",
 	)
 
@@ -61,22 +61,6 @@ func main() {
 	http.HandleFunc("/query", query)
 	Log.Printf("Trying to serve on address: %v\n", *addr)
 	Log.Fatalln(http.ListenAndServe(*addr, nil).Error())
-}
-
-type TypeError struct {
-	msg string
-}
-
-func (err TypeError) Error() string {
-	return err.msg
-}
-
-type ParameterError struct {
-	msg string
-}
-
-func (err ParameterError) Error() string {
-	return err.msg
 }
 
 func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
