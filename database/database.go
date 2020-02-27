@@ -49,8 +49,6 @@ func NewDatabase(file string, mainLog *log.Logger) (*Database, bool, error) {
 }
 
 func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
 	var idx int64
 	{
 		bytes := floatToBytes(long)
@@ -61,6 +59,8 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 		hasher.Reset()
 	}
 
+	db.lock.RLock()
+	defer db.lock.RUnlock()
 	stmt, err := db.conn.Prepare(
 		"SELECT time,long,lat,pm25_concentration,temperature FROM d"+fmt.Sprintf("%v", truncateTime(day))+" WHERE idx=?",
 		idx,
@@ -204,8 +204,6 @@ func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat
 }
 
 func (db *Database) Insert(data Data) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
 	stmt, err := db.conn.Prepare(
 		"SELECT idx FROM long"+fmt.Sprintf("%v", getIndexFromLongitude(data.Longitude))+" WHERE long=? AND lat=?",
 		data.Longitude, data.Latitude,
@@ -220,6 +218,8 @@ func (db *Database) Insert(data Data) error {
 		return err
 	}
 
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	var id int64
 	if next {
 		err = stmt.Scan(&id)
