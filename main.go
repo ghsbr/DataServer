@@ -130,7 +130,7 @@ func main() {
 		Log = log.New(ioutil.Discard, "", 0)
 	}
 
-	db, mod, err := database.NewDatabase("data.db", Log)
+	db, mod, err := database.NewDatabase("dataserver", "dataserver", "dataserver", Log)
 	if err != nil {
 		Log.Fatalln(err)
 	}

@@ -1,13 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"testing"
 
@@ -19,10 +14,12 @@ var db *database.Database
 
 func TestNewDatabase(dc *testing.T) {
 	var err error
-	db, _, err = database.NewDatabase(":memory:", log.New(os.Stdout, "[DataServer] ", 0))
+	var perf bool
+	db, perf, err = database.NewDatabase("dataserver", "dataserver", "dataserver", log.New(os.Stdout, "[DataServer] ", 0))
 	if err != nil {
-		dc.Errorf("Error while creating Database: %v", err)
+		dc.Fatalf("Error while creating Database: %v", err)
 	}
+	dc.Logf("Setup performed? %v", perf)
 }
 
 var out data.Data
@@ -38,6 +35,7 @@ func TestInsert(dc *testing.T) {
 			jsonExample = make([]byte, stat.Size())
 			file.Read(jsonExample)
 		} else {
+			file.Close()
 			dc.Errorf("Error while reading File stats: %v", err)
 		}
 		file.Close()
@@ -48,7 +46,7 @@ func TestInsert(dc *testing.T) {
 
 	err := db.Insert(out)
 	if err != nil {
-		dc.Errorf("Error found %v", err)
+		dc.Fatalf("Error found %v", err)
 	}
 }
 
@@ -62,7 +60,7 @@ func TestPreciseQuery(dc *testing.T) {
 }
 
 func TestApproximateQueryInRange(dc *testing.T) {
-	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, out.Ts, 1)
+	els, err := db.ApproximateQuery(out.Longitude, out.Latitude, out.Ts, .4174)
 	if err != nil {
 		dc.Errorf("Error found %v", err)
 	} else if len(els) > 0 {
@@ -87,81 +85,4 @@ func TestClose(dc *testing.T) {
 	if err := db.Close(); err != nil {
 		dc.Errorf("Error found %v", err)
 	}
-}
-
-func TestMain(dc *testing.T) {
-	const addr string = "127.0.0.1:8080"
-	dc.Run(
-		"Insertion test",
-		func(test *testing.T) {
-			resp, err := http.Post("http://"+addr+"/insert", "application/json", bytes.NewReader(jsonExample))
-			if err != nil {
-				dc.Fatalf("%v", err)
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					dc.Fatalf("%v", err)
-				} else {
-					dc.Log(string(body))
-				}
-			}
-		},
-	)
-
-	form := url.Values(make(map[string][]string))
-	form.Set("long", fmt.Sprintf("%v", out.Longitude))
-	form.Set("lat", fmt.Sprintf("%v", out.Latitude))
-	form.Set("day", fmt.Sprintf("%v", out.Ts))
-	dc.Run(
-		"PreciseQuery test",
-		func(test *testing.T) {
-			resp, err := http.PostForm("http://"+addr+"/query", form)
-			if err != nil {
-				dc.Errorf("%v", err)
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					dc.Errorf("%v", err)
-				} else {
-					dc.Log(string(body))
-				}
-			}
-		},
-	)
-
-	form.Set("range", "1")
-	dc.Run(
-		"ApproximateQuery In Range test",
-		func(test *testing.T) {
-			resp, err := http.PostForm("http://"+addr+"/query", form)
-			if err != nil {
-				dc.Errorf("%v", err)
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					dc.Errorf("%v", err)
-				} else {
-					dc.Log(string(body))
-				}
-			}
-		},
-	)
-
-	form.Set("range", "100")
-	dc.Run(
-		"ApproximateQuery Out of Range test",
-		func(test *testing.T) {
-			resp, err := http.PostForm("http://"+addr+"/query", form)
-			if err != nil {
-				dc.Errorf("%v", err)
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					dc.Errorf("%v", err)
-				} else {
-					dc.Log(string(body))
-				}
-			}
-		},
-	)
 }
