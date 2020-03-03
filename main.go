@@ -106,7 +106,7 @@ type (
 	Data     = data.Data
 	Database = database.Database
 )
-
+	
 func main() {
 	addr := flag.String(
 		"addr", "localhost:8080",
@@ -130,6 +130,7 @@ func main() {
 		Log = log.New(ioutil.Discard, "", 0)
 	}
 
+	//Crea databaseHandler
 	db, mod, err := database.NewDatabase("dataserver", "dataserver", "dataserver", Log)
 	if err != nil {
 		Log.Fatalln(err)
@@ -137,6 +138,7 @@ func main() {
 	defer db.Close()
 	Log.Printf("Was setup performed? %v\n", mod)
 
+	//Prepara JSON Schema
 	err = json.Unmarshal(rawSchema, &schema)
 	if err != nil {
 		Log.Fatalln(err)
@@ -148,6 +150,7 @@ func main() {
 	//Insert Handler
 	insert := makeInsert(db)
 
+	//Aggiungi Handlers e inizia ad ascoltare sull'indirizzo addr
 	http.HandleFunc("/insert", insert)
 	http.HandleFunc("/query", query)
 	Log.Printf("Trying to serve on address: %v\n", *addr)
@@ -156,6 +159,8 @@ func main() {
 
 func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
+		//TODO: controllare vari returns
+		//Se il metodo della richiesta è POST elaborala
 		if req.Method == "POST" {
 			err := req.ParseForm()
 			if err != nil {
@@ -164,6 +169,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 
+			//Closure per estrapolare dati dal POST form
 			getFromForm := func(paramName string, out interface{}) error {
 				if str := req.PostForm.Get(paramName); str != "" {
 					t := reflect.TypeOf(out)
@@ -196,6 +202,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				return nil
 			}
 
+			//Ottieni un punto temporale 
 			var day int64
 			err = getFromForm("day", &day)
 			if err != nil {
@@ -203,6 +210,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				resp.Write([]byte(err.Error()))
 			}
 
+			//Ottieni la longitudine
 			var long float64
 			err = getFromForm("long", &long)
 			if err != nil {
@@ -210,6 +218,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				resp.Write([]byte(err.Error()))
 			}
 
+			//Ottieni la latitudine
 			var lat float64
 			err = getFromForm("lat", &lat)
 			if err != nil {
@@ -217,6 +226,8 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				resp.Write([]byte(err.Error()))
 			}
 
+			//Se il parametro range esiste allora crea una ApproximateQuery con esso
+			//altrimenti fai una PreciseQuery e salvalo dentro data
 			var data interface{}
 			var rng float64
 			if err = getFromForm("range", &rng); err != nil {
@@ -238,6 +249,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 
+			//Se tutto viene completato senza errori, serializza i dati e rispondi. 
 			data, err = json.Marshal(data)
 			if err != nil {
 				resp.Write([]byte(err.Error()))
@@ -258,6 +270,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 
 func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
+		// Se il metodo corrisponde a POST elaboralo
 		if req.Method == "POST" {
 			body, err := ioutil.ReadAll(req.Body)
 			if err != nil {
@@ -266,6 +279,7 @@ func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 
+			//Confronta il JSON con lo Schema
 			{
 				errs, err := schema.ValidateBytes(body)
 				if err != nil {
@@ -286,6 +300,7 @@ func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
 				}
 			}
 
+			//Se il JSON corrisponde allo Schema deserializzalo e inseriscilo nel database
 			var inData Data
 			err = json.Unmarshal(body, &inData)
 			if err != nil {

@@ -19,20 +19,23 @@ var (
 	Log    *log.Logger
 	hasher = xxhash.New()
 )
-
+//setta il logger per questo pacchetto.
 func setLogger(mainLog *log.Logger) {
 	Log = log.New(mainLog.Writer(), "[DataServer/Database] ", mainLog.Flags())
 }
 
-//uno struct che fa da man-in-the-middle per il database
+//uno struct che fa da man-in-the-middle per il database.
 type Database struct {
 	conn *sql.DB
 }
 
 //costruttore della classe Database
-//ritorna un errore, se esiste, e un oggetto database
+//ritorna un errore, se esiste, e un oggetto database.
 func NewDatabase(user, password, dbname string, mainLog *log.Logger) (*Database, bool, error) {
+	//Imposta il logger
 	setLogger(mainLog)
+	//Fa una prova di autenticazione nel database, tenendo aperta la connessione nel caso in cui vada
+	//a buon fine.
 	conn, err := sql.Open(
 		"postgres",
 		fmt.Sprintf("user=%v password=%v dbname=%v host=/run/postgresql", user, password, dbname),
@@ -45,6 +48,7 @@ func NewDatabase(user, password, dbname string, mainLog *log.Logger) (*Database,
 		return nil, false, err
 	}
 
+	//Controlla se il setup del database è gia stato effettuato, in caso negativo viene eseguito.
 	mod, err := performOneTimeSetup(conn)
 	if err != nil {
 		conn.Close()
@@ -53,8 +57,11 @@ func NewDatabase(user, password, dbname string, mainLog *log.Logger) (*Database,
 
 	return &Database{conn}, mod, err
 }
-
+// Controlla che la stazione a quelle determinate coordinate, longitudine e latitudine, esista realmente.
+//Prende tutti i parametri passati e controlla nel database che effettivamente
+//esista una corrispondenza sulla base del relativo incrocio. 
 func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, error) {
+	//Calcola l'indice della stazione.
 	var idx int64
 	{
 		bytes := floatToBytes(long)
@@ -65,6 +72,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 		hasher.Reset()
 	}
 
+	//Query al database.
 	stmt, err := db.conn.Prepare(
 		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", truncateTime(day)) + " WHERE idx=$1",
 	)
@@ -75,6 +83,7 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 
 	row := stmt.QueryRow(idx)
 
+	//TODO: Migliorare error.handling
 	if row != nil {
 		var ret Data
 		err = row.Scan(&ret.Ts, &ret.Longitude, &ret.Latitude, &ret.Pm25Aqi, &ret.Temperature)
@@ -87,12 +96,17 @@ func (db *Database) PreciseQuery(long float64, lat float64, day int64) (Data, er
 		return Data{}, NotFoundError{fmt.Sprintf("Station %v not found", idx)}
 	}
 }
-
+//Chiede latitudine, longitudine, un punto temporale e un range di coordinate e cerca
+//nel range tutte le stazioni, prendendone la relativa scansione più vicina temporalmente al punto temporale passato 
 func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng float64) ([]Data, error) {
+	//TODO: Controllare che rng sia positivo
 	Log.Printf("%v %v\t%v %v\n", long, rng, long-rng, long+rng)
+	//Controlla se l'inizio e la fine del range sono inclusi nella medesima tabella.
 	if getIndexFromLongitude(long-rng) == getIndexFromLongitude(long+rng) {
 		return db.actualApproximateQuery(long-rng, long+rng, lat, rng, day)
 	} else {
+		//Se non si trovano nella stessa tabella, procedi nella raccolta dei dati da più tabelle
+		//TODO: Farlo con le goroutines
 		lowerLimit := math.Max(long-rng, -180)
 		Log.Printf("%v %v\n", lowerLimit, 180)
 		ret, err := db.actualApproximateQuery(
@@ -115,6 +129,7 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 				return nil, err
 			}
 
+			//Aggiugni ogni risultato alla lista che li raccoglie
 			ret = append(ret, part...)
 		}
 		return ret, nil
@@ -122,6 +137,8 @@ func (db *Database) ApproximateQuery(long float64, lat float64, day int64, rng f
 }
 
 func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat float64, latrng float64, day int64) ([]Data, error) {
+	//Raccogli gli indici di tutte le stazioni prendendo come longitudine da longMin a longMax e come latitudine
+	// da lat-latrng e lat+latrng.
 	idxs, err := (func() ([]int64, error) {
 		stmt, err := db.conn.Prepare(
 			"SELECT idx FROM \"long" + fmt.Sprintf("%v", getIndexFromLongitude(longMin)) +
@@ -158,6 +175,7 @@ func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat
 	}
 
 	Log.Printf("%v", idxs)
+	// Se c'è più di un indice prendiamo la rilevazione più vicina temporalmente a quello richiesto
 	stmt, err := db.conn.Prepare(
 		"SELECT time,long,lat,pm25_concentration,temperature FROM d" + fmt.Sprintf("%v", truncateTime(day)) + " WHERE idx = $1",
 	)
@@ -180,6 +198,7 @@ func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat
 				closer  Data
 				current Data
 			)
+			//Su tutte le rilevazioni prendi quella più vicina temporalmente a quello richiesto
 			for next := rows.Next(); next; next = rows.Next() {
 				if err = rows.Err(); err != nil {
 					return err
@@ -207,7 +226,10 @@ func (db *Database) actualApproximateQuery(longMin float64, longMax float64, lat
 	return ret, nil
 }
 
+//Inserisci data nel database
 func (db *Database) Insert(data Data) error {
+	//TODO: Calcolare indice anzichè cercarlo
+	// Cerco la presenza dell'indice
 	stmt, err := db.conn.Prepare(
 		"SELECT idx FROM long" + fmt.Sprintf("%v", getIndexFromLongitude(data.Longitude)) + " WHERE long = $1 AND lat = $2",
 	)
@@ -216,12 +238,14 @@ func (db *Database) Insert(data Data) error {
 	}
 	defer stmt.Close()
 
+	//Inizio transazione
 	tx, err := db.conn.Begin()
 	if err != nil {
 		Log.Printf("%v\n", err)
 		return err
 	}
 
+	//Se l'indice è presente salvalo, altrimenti procedi ad inserirlo
 	row := stmt.QueryRow(data.Longitude, data.Latitude)
 	var id int64
 	err = row.Scan(&id)
@@ -248,6 +272,7 @@ func (db *Database) Insert(data Data) error {
 		}
 	}
 
+	//Se non esiste crea la tabella del relativo giorno
 	err = createTimeNamedTable(tx, data.Ts)
 	if err != nil {
 		Log.Println("Let's go")
@@ -255,6 +280,7 @@ func (db *Database) Insert(data Data) error {
 		return err
 	}
 
+	//Inserisci nella tabella il dato data
 	_, err = tx.Exec(
 		"INSERT INTO d"+fmt.Sprintf("%v", truncateTime(data.Ts))+" VALUES ($1, $2, $3, $4, $5, $6)",
 		id, data.Ts, data.Longitude, data.Latitude, data.Pm25Aqi, data.Temperature,
@@ -263,11 +289,12 @@ func (db *Database) Insert(data Data) error {
 		tx.Rollback()
 		return err
 	}
+	//Se non sono avvenuti errori, completa la transazione
 	err = tx.Commit()
 
 	return err
 }
-
+//Chiude la connessione
 func (db *Database) Close() error {
 	return db.conn.Close()
 }
