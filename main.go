@@ -106,7 +106,7 @@ type (
 	Data     = data.Data
 	Database = database.Database
 )
-	
+
 func main() {
 	addr := flag.String(
 		"addr", "localhost:8080",
@@ -161,6 +161,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		//TODO: controllare vari returns
 		//Se il metodo della richiesta è POST elaborala
+		resp.Header().Add("Access-Control-Allow-Origin", "*")
 		if req.Method == "POST" {
 			err := req.ParseForm()
 			if err != nil {
@@ -202,7 +203,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				return nil
 			}
 
-			//Ottieni un punto temporale 
+			//Ottieni un punto temporale
 			var day int64
 			err = getFromForm("day", &day)
 			if err != nil {
@@ -249,7 +250,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 				return
 			}
 
-			//Se tutto viene completato senza errori, serializza i dati e rispondi. 
+			//Se tutto viene completato senza errori, serializza i dati e rispondi.
 			data, err = json.Marshal(data)
 			if err != nil {
 				resp.Write([]byte(err.Error()))
@@ -271,6 +272,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 func makeInsert(db *Database) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		// Se il metodo corrisponde a POST elaboralo
+		resp.Header().Add("Access-Control-Allow-Origin", "*")
 		if req.Method == "POST" {
 			body, err := ioutil.ReadAll(req.Body)
 			if err != nil {
