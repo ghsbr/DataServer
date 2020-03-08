@@ -209,6 +209,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				Log.Println(err)
 				resp.Write([]byte(err.Error()))
+				return
 			}
 
 			//Ottieni la longitudine
@@ -217,6 +218,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				Log.Println(err)
 				resp.Write([]byte(err.Error()))
+				return
 			}
 
 			//Ottieni la latitudine
@@ -225,6 +227,7 @@ func makeQuery(db *Database) func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				Log.Println(err)
 				resp.Write([]byte(err.Error()))
+				return
 			}
 
 			//Se il parametro range esiste allora crea una ApproximateQuery con esso
